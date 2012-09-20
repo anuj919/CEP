@@ -1,0 +1,12 @@
+E1 {a:Double:Normal(2.0,0.5940914749469456), b:Integer:UniformInteger(0,1)}
+E2 {a:Double:Normal(2.0,1.0289966189516426), b:Integer:UniformInteger(0,1)}
+E3 {a:Integer:UniformInteger(0,5), b:Integer:UniformInteger(0,100)}
+E4 {a:Integer:UniformInteger(0,5)}
+E5 {a:Integer:UniformInteger(0,10), b:Double:Normal(5.0, 2.0)}
+E6 {a:Integer:UniformInteger(0,10)}
+E7 {a:Integer:UniformInteger(0,10)}
+E8 {a:Integer:UniformInteger(0,10), b:Double:Normal(6.0,2.5)}
+E9 {a:Integer:UniformInteger(0,10)}
+E10 {a:Integer:UniformInteger(0,10)}
+E11 {a:Integer:UniformInteger(0,10)}
+
