@@ -1,9 +1,7 @@
 package testcase;
 
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -11,7 +9,6 @@ import org.apache.commons.math3.distribution.BinomialDistribution;
 import org.apache.commons.math3.distribution.IntegerDistribution;
 import org.apache.commons.math3.distribution.PoissonDistribution;
 
-import state.ConcurrentStateGenerator;
 import state.ConcurrentStateGeneratorNoReuse;
 import state.EndState;
 import state.GlobalState;
@@ -19,17 +16,13 @@ import state.State;
 import testdatagenerator.GenerateRandomEvents;
 import testdatagenerator.parser.ParseException;
 import time.timestamp.IntervalTimeStamp;
-
-import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.kryo.io.Input;
-
 import evaluator.Evaluator;
 import evaluator.JaninoEvalFactory;
 import event.Event;
 import event.EventClass;
-import event.PrimaryEvent;
 import event.eventtype.ComplexEventType;
-import event.eventtype.PrimaryEventType;
+//import com.esotericsoftware.kryo.Kryo;
+//import com.esotericsoftware.kryo.io.Input;
 
 public class TestConcurrentStateWithAutomatonNoReuse {		
 	@SuppressWarnings("unchecked")

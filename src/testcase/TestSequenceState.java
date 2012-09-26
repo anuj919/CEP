@@ -7,12 +7,13 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
-import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.kryo.io.Input;
+//import com.esotericsoftware.kryo.Kryo;
+//import com.esotericsoftware.kryo.io.Input;
 import state.EndState;
 import state.GlobalState;
 import state.SequenceStateGenerator;
 import state.State;
+import testdatagenerator.GenerateRandomEvents;
 import testdatagenerator.parser.ParseException;
 import time.timestamp.IntervalTimeStamp;
 import evaluator.Evaluator;
@@ -24,6 +25,10 @@ import event.eventtype.ComplexEventType;
 import event.eventtype.PrimaryEventType;
 import java.io.BufferedInputStream;
 
+import org.apache.commons.math3.distribution.BinomialDistribution;
+import org.apache.commons.math3.distribution.IntegerDistribution;
+import org.apache.commons.math3.distribution.PoissonDistribution;
+
 public class TestSequenceState {		
 	/**
 	 * @param args
@@ -31,21 +36,27 @@ public class TestSequenceState {
 	 * @throws ParseException
 	 */
 	public static void main(String[] args) throws FileNotFoundException, ParseException {
-		int testcases = 100;
-		String inputFilePath = "events.txt";
+		int repeat=1;
+		int testcases = 1000;
+		String inputFilePath = "spec.txt";
+		//String outputFilePath = "events.txt";
+		GenerateRandomEvents generator = new GenerateRandomEvents(inputFilePath);
+		IntegerDistribution dist = new BinomialDistribution(generator.getNumEventClasses()-1,0.2);
+		IntegerDistribution timeStampDist = new PoissonDistribution(2);
+		generator.setDistribution(dist);
 		
 		
-		
-		Kryo kryo = new Kryo();
+		/*Kryo kryo = new Kryo();
 		Input input = new Input(new BufferedInputStream(new FileInputStream(inputFilePath)));
 		kryo.register(PrimaryEvent.class);
 		kryo.register(IntervalTimeStamp.class);
 		kryo.register(PrimaryEventType.class);
 		kryo.register(EventClass.class);
 		kryo.register(HashMap.class);
-		kryo.register(LinkedList.class);
+		kryo.register(LinkedList.class);*/
 		
-		LinkedList<EventClass> classes = kryo.readObject(input, LinkedList.class);
+		//LinkedList<EventClass> classes = kryo.readObject(input, LinkedList.class);
+		List<EventClass> classes = generator.getEventClasses();
 		GlobalState globalState = GlobalState.getInstance();
 		
 		for(EventClass ec : classes)
@@ -75,9 +86,13 @@ public class TestSequenceState {
 		*/
 		List<Event> generatedEvents = new LinkedList<Event>();
 		long start=System.nanoTime();
+		long time=0;
 		
 		for(int i=0;i<testcases;i++) {
-			PrimaryEvent e = kryo.readObject(input, PrimaryEvent.class);
+			//PrimaryEvent e = kryo.readObject(input, PrimaryEvent.class);
+			Event e = generator.generateEvent();
+			time+=timeStampDist.sample();
+			e.setTimeStamp(new IntervalTimeStamp(time,time));
 			System.out.println(i+":"+e);
 			//System.out.println(state.submitNext(e));	
 			//state.submitNext(e);

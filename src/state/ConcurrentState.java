@@ -12,14 +12,12 @@ import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import state.GlobalState;
+import state.State;
 import time.timemodel.TimeModel;
 import time.timestamp.IntervalTimeStamp;
 import time.timestamp.TimeStamp;
 
-import com.google.common.collect.Multiset;
-import com.google.common.collect.TreeMultiset;
-
-import datastructures.SortedTreeList;
 
 import evaluator.Evaluator;
 import evaluator.JaninoEvalFactory;

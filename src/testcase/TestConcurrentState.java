@@ -1,14 +1,13 @@
 package testcase;
 
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
-import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.kryo.io.Input;
+import org.apache.commons.math3.distribution.BinomialDistribution;
+import org.apache.commons.math3.distribution.IntegerDistribution;
+import org.apache.commons.math3.distribution.PoissonDistribution;
 
 import state.ConcurrentState;
 import state.EndState;
@@ -18,19 +17,14 @@ import testdatagenerator.parser.ParseException;
 import time.timestamp.IntervalTimeStamp;
 import event.Event;
 import event.EventClass;
-import event.PrimaryEvent;
-import event.eventtype.PrimaryEventType;
-import java.io.BufferedInputStream;
-
-import org.apache.commons.math3.distribution.BinomialDistribution;
-import org.apache.commons.math3.distribution.IntegerDistribution;
-import org.apache.commons.math3.distribution.PoissonDistribution;
+//import com.esotericsoftware.kryo.Kryo;
+//import com.esotericsoftware.kryo.io.Input;
 
 public class TestConcurrentState {		
 	@SuppressWarnings("unchecked")
 	public static void main(String[] args) throws FileNotFoundException, ParseException {
 		int repeat=1;
-		int testcases = 1000;
+		int testcases = 100;
 		String inputFilePath = "spec.txt";
 		//String outputFilePath = "events.txt";
 		GenerateRandomEvents generator = new GenerateRandomEvents(inputFilePath);

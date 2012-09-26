@@ -19,8 +19,8 @@ import testdatagenerator.GenerateRandomEvents;
 import testdatagenerator.parser.ParseException;
 import time.timestamp.IntervalTimeStamp;
 
-import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.kryo.io.Input;
+//import com.esotericsoftware.kryo.Kryo;
+//import com.esotericsoftware.kryo.io.Input;
 
 import event.Event;
 import event.EventClass;
