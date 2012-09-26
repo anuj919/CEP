@@ -1,5 +1,6 @@
 package event;
 
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -21,7 +22,9 @@ public class ComplexEvent extends Event  {
 	protected EventClass eventClass;
 	protected TimeStamp timestamp;
 	protected scala.collection.immutable.List<Event> constituents; 
+	protected java.util.List<Event> constituentsInJava;
 	protected Map<String,scala.collection.immutable.List<Event> > eventClassNamesToEvents;
+	protected java.util.Map<String,scala.collection.immutable.List<Event> > eventClassNamesToEventsInJava;
 	
 	protected TimeStamp permissibleWindow;
 	//private Event endEvent;
@@ -37,7 +40,9 @@ public class ComplexEvent extends Event  {
 		ComplexEvent newEvent = new ComplexEvent(ce.getEventClass());
 		newEvent.timestamp = ce.timestamp.deepCopy();
 		newEvent.constituents = ce.constituents;
+		newEvent.constituentsInJava = ce.constituentsInJava;
 		newEvent.eventClassNamesToEvents = ce.eventClassNamesToEvents;
+		newEvent.eventClassNamesToEventsInJava = ce.eventClassNamesToEventsInJava;
 		newEvent.permissibleWindow = (IntervalTimeStamp)ce.permissibleWindow.deepCopy();
 		newEvent.endsBy = ce.endsBy;
 		newEvent.consumed=ce.consumed;
@@ -47,7 +52,9 @@ public class ComplexEvent extends Event  {
 	public ComplexEvent(EventClass eventClass) {
 		this.eventClass = eventClass;
 		constituents = List$.MODULE$.empty();
+		constituentsInJava = Collections.emptyList();
 		eventClassNamesToEvents = Map$.MODULE$.empty();
+		eventClassNamesToEventsInJava = Collections.emptyMap();
 		atomicInt = new AtomicInteger();
 		consumed=false;
 	}
@@ -65,12 +72,14 @@ public class ComplexEvent extends Event  {
 	public int addEvent(Event e) {
 		if (e instanceof PrimaryEvent) {
 			constituents=constituents.$colon$colon(e);
+			constituentsInJava = JavaConversions.seqAsJavaList(constituents);
 			addToMultiList(e);
 			updateTimeStamp(e);
 		} else {
 			ComplexEvent ce = (ComplexEvent) e;
 			List<Event> peList = ce.getConstitutingEvents();
 			constituents = constituents.$colon$colon$colon(ce.constituents);
+			constituentsInJava = JavaConversions.seqAsJavaList(constituents);
 			for(Event e1 : peList) {
 				PrimaryEvent pe = (PrimaryEvent) e1;
 				//constituents=constituents.$colon$colon(e1);
@@ -82,7 +91,7 @@ public class ComplexEvent extends Event  {
 	}
 	
 	public List<Event> getConstitutingEvents() {
-		return JavaConversions.seqAsJavaList(constituents);
+		return constituentsInJava;
 	}
 	
 	private void updateTimeStamp(Event e) {
@@ -102,6 +111,7 @@ public class ComplexEvent extends Event  {
 		else
 			list=eventClassNamesToEvents.apply(eventClassName).$colon$colon(e);
 		eventClassNamesToEvents =  eventClassNamesToEvents.$plus(new Tuple2<String, scala.collection.immutable.List<Event>>(eventClassName, list));
+		eventClassNamesToEventsInJava = JavaConversions.mapAsJavaMap(eventClassNamesToEvents);
 	}
 	
 	// user has to specify EventClass[:NthInstance].AttrName
@@ -116,14 +126,14 @@ public class ComplexEvent extends Event  {
 		String attrName = eventClassAndAttr[1];
 		
 		//determine the referenced event
-		Event event = JavaConversions.mapAsJavaMap(eventClassNamesToEvents).get(eventClassName).apply(nthInstance);
+		Event event = eventClassNamesToEventsInJava.get(eventClassName).apply(nthInstance);
 		
 		return event.getAttributeValue(attrName);
 	}
 	
 	public Object getAttributeValue(String eventClassName, int nthInstance, String attrName) throws NoSuchFieldException {
 		//determine the referenced event
-		Event event = JavaConversions.mapAsJavaMap(eventClassNamesToEvents).get(eventClassName).apply(nthInstance);
+		Event event = eventClassNamesToEventsInJava.get(eventClassName).apply(nthInstance);
 		return event.getAttributeValue(attrName);
 	}
 	
@@ -159,7 +169,7 @@ public class ComplexEvent extends Event  {
 	}
 	
 	public boolean containsEventOfClass(String className) {
-		scala.collection.immutable.List<Event> listForClass = JavaConversions.mapAsJavaMap(eventClassNamesToEvents).get(className);
+		scala.collection.immutable.List<Event> listForClass = eventClassNamesToEventsInJava.get(className);
 		return listForClass!=null && !listForClass.isEmpty();
 	}
 	
@@ -179,7 +189,7 @@ public class ComplexEvent extends Event  {
 		if(consumed)
 			return true;
 		// otherwise check all constituents
-		for(Event e:JavaConversions.seqAsJavaList(constituents)) {
+		for(Event e:constituentsInJava) {
 			if(e.isConsumed())
 				consumed=true;
 		}
@@ -188,7 +198,7 @@ public class ComplexEvent extends Event  {
 
 	public void setConsumed(boolean consumed) {
 		assert consumed;
-		for(Event e:JavaConversions.seqAsJavaList(constituents)) {
+		for(Event e:constituentsInJava) {
 			e.setConsumed(true);
 		}
 		this.consumed = consumed;

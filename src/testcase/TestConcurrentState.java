@@ -24,7 +24,7 @@ public class TestConcurrentState {
 	@SuppressWarnings("unchecked")
 	public static void main(String[] args) throws FileNotFoundException, ParseException {
 		int repeat=1;
-		int testcases = 100;
+		int testcases = 1000;
 		String inputFilePath = "spec.txt";
 		//String outputFilePath = "events.txt";
 		GenerateRandomEvents generator = new GenerateRandomEvents(inputFilePath);
