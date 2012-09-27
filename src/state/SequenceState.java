@@ -177,7 +177,10 @@ public class SequenceState implements State {
 		
 		for(Event cachedEvent : cachedEvents) {
 			// try to add this cachedEvent to newPartialMatches
-			for(ComplexEvent partialMatch : newPartialMatches ) {						
+			for(ComplexEvent partialMatch : newPartialMatches ) {	
+				// check if cached event can be next event of partialMatch?
+				if(!tm.canBeNext(cachedEvent.getTimeStamp(), partialMatch.getTimeStamp()))
+					continue;
 				ComplexEvent extendedPartialMatch = ComplexEvent.copyOf(partialMatch);
 				extendedPartialMatch.addEvent(cachedEvent);
 				boolean constraintSatisfied = false;

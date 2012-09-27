@@ -36,7 +36,7 @@ public class IntervalTimeModel extends TimeModel {
 	public boolean canBeNext(TimeStamp _ts2, TimeStamp _ts1) {
 		IntervalTimeStamp ts1=(IntervalTimeStamp) _ts1;
 		IntervalTimeStamp ts2=(IntervalTimeStamp) _ts2;
-		return ts1.getStartTime() < ts2.getStartTime()  && ts1.getEndTime() <= ts2.getEndTime();
+		return ts1.getStartTime() <= ts2.getStartTime()  && ts1.getEndTime() <= ts2.getEndTime();
 	}
 
 	@Override

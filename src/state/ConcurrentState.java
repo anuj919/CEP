@@ -113,7 +113,7 @@ public class ConcurrentState implements State {
 			if(result>0) { //expired
 				itr.remove();
 				continue;
-			}
+			} 
 			
 			ComplexEvent extendedPartialMatch = ComplexEvent.copyOf(partialMatch);
 			int numSubEvents = extendedPartialMatch.addEvent(e);
@@ -129,8 +129,11 @@ public class ConcurrentState implements State {
 			}
 			if(numSubEvents == numClasses) {
 				if(constraintSatisfied && !extendedPartialMatch.isConsumed()) {
+					// Generate all combinations for Complex Events like, E2;E4 and E4;E2 if E2 and E4 have same timestamp
+					
 					extendedPartialMatch.setEventClass(outputEventClass);
 					toNextStateList.add(extendedPartialMatch);
+					
 					//extendedPartialMatch.setConsumed(true);
 					//itr.remove();
 				}

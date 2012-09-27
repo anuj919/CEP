@@ -100,7 +100,7 @@ public class GenerateRandomEvents {
 	}
 	
 	public static void main(String[] args) throws FileNotFoundException, ParseException {
-		int testcases = 10000000;
+		int testcases = 10000;
 		String inputFilePath = "spec.txt";
 		String outputFilePath = "events.txt";
 		GenerateRandomEvents generator = new GenerateRandomEvents(inputFilePath);
@@ -108,7 +108,7 @@ public class GenerateRandomEvents {
 		
 		// Distribution for selecting eventclasses
 		IntegerDistribution dist = new BinomialDistribution(generator.getNumEventClasses()-1,0.2);
-		IntegerDistribution timeStampDist = new PoissonDistribution(2);
+		IntegerDistribution timeStampDist = new PoissonDistribution(1);
 		generator.setDistribution(dist);
 		
 		//List<TimeStamp> randomTimeStamps = getRandomTimeStamps(testcases);
@@ -126,10 +126,12 @@ public class GenerateRandomEvents {
 		kryo.register(LinkedList.class);
 		
 		kryo.writeObject(output, generator.eventClasses);
+		kryo.writeObject(output, testcases);
 		
 		for(int i=0;i<testcases;i++) {
 			PrimaryEvent e = generator.generateEvent();
 			time+=timeStampDist.sample();
+			time++;
 			e.setTimeStamp(new IntervalTimeStamp(time,time));
 			//System.out.println(e);
 			kryo.writeObject(output, e);
