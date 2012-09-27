@@ -70,7 +70,7 @@ public class TestConcurrentState {
 		
 		String predicate = "E1.a + E2.a < 5 && E3.a == E4.a";
 		//String predicate = "E3.a + E4.a < 10 ";
-		long timeDuration = 20l;
+		long timeDuration = 100l;
 		ConcurrentState concState = new ConcurrentState(timeDuration,predicate,seqList);
 		
 		
