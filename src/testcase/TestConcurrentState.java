@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.StringTokenizer;
 
 import state.ConcurrentState;
 import state.EndState;
@@ -21,12 +22,11 @@ import event.Event;
 import event.EventClass;
 import event.PrimaryEvent;
 import event.eventtype.PrimaryEventType;
-//import com.esotericsoftware.kryo.Kryo;
-//import com.esotericsoftware.kryo.io.Input;
 
 public class TestConcurrentState {		
 	@SuppressWarnings("unchecked")
 	public static void main(String[] args) throws FileNotFoundException, ParseException {
+		long start=System.nanoTime();
 		int repeat=1;
 		//String specFilePath = "spec.txt";
 		//GenerateRandomEvents generator = new GenerateRandomEvents(specFilePath);
@@ -35,6 +35,10 @@ public class TestConcurrentState {
 		
 		String inputFilePath = args[0];
 		int testcases = Integer.parseInt(args[1]);
+		String eventClasses = args[2];
+		String predicate = args[3];
+		long timeDuration = Integer.parseInt(args[4]);
+		
 		Kryo kryo = new Kryo();
 		Input input = new Input(new BufferedInputStream(new FileInputStream(inputFilePath)));
 		kryo.register(PrimaryEvent.class);
@@ -60,17 +64,23 @@ public class TestConcurrentState {
 		
 		
 		List<EventClass> seqList = new ArrayList<EventClass>();
-		seqList.add(globalState.getEventClass("E1"));
-		seqList.add(globalState.getEventClass("E2"));
-		seqList.add(globalState.getEventClass("E3"));
-		seqList.add(globalState.getEventClass("E4"));
-        seqList.add(globalState.getEventClass("E5"));
-        seqList.add(globalState.getEventClass("E6"));
-        seqList.add(globalState.getEventClass("E7"));
+		StringTokenizer tokenizer = new StringTokenizer(eventClasses, " ");
+		while(tokenizer.hasMoreTokens())
+			seqList.add(globalState.getEventClass(tokenizer.nextToken()));
 		
-		String predicate = "E1.a + E2.a < 5 && E3.a == E4.a";
+//		seqList.add(globalState.getEventClass("E1"));
+//		seqList.add(globalState.getEventClass("E2"));
+//		seqList.add(globalState.getEventClass("E3"));
+//		seqList.add(globalState.getEventClass("E4"));
+//      seqList.add(globalState.getEventClass("E5"));
+//      seqList.add(globalState.getEventClass("E6"));
+//      seqList.add(globalState.getEventClass("E7"));
+//      seqList.add(globalState.getEventClass("E8"));
+//      seqList.add(globalState.getEventClass("E9"));
+		
+		//String predicate = "E1.a + E2.a < 5 && E3.a == E4.a";
 		//String predicate = "E3.a + E4.a < 10 ";
-		long timeDuration = 100l;
+		//long timeDuration = 70l;
 		ConcurrentState concState = new ConcurrentState(timeDuration,predicate,seqList);
 		
 		
@@ -84,7 +94,7 @@ public class TestConcurrentState {
 		long generatedEvents=0;
 		long prev=0,i=0;
 		
-		long start=System.nanoTime();
+		
 		
 		for(int j=0;j<repeat;j++)
 		while(i<testcases) {
