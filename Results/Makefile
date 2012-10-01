@@ -2,20 +2,23 @@ all: plots
 
 1: plots
 	mkdir OneState
+	./addTime.sh result.csv
 	mv *.ps OneState/.
-	cp *.csv OneState/.
+	mv *.csv OneState/.
 	evince OneState/*.ps
 
 2: plots
 	mkdir AutomatonWithReuse
+	./addTime.sh result.csv
 	mv *.ps AutomatonWithReuse/.
-	cp *.csv AutomatonWithReuse/.
+	mv *.csv AutomatonWithReuse/.
 	evince AutomatonWithReuse/*.ps
 
 3: plots
 	mkdir AutomatonWithNoReuse
+	./addTime.sh result.csv
 	mv *.ps AutomatonWithNoReuse/.
-	cp *.csv AutomatonWithNoReuse/.
+	mv *.csv AutomatonWithNoReuse/.
 	evince AutomatonWithNoReuse/*.ps
 
 plots: plot-memory.ps plot-cpu.ps

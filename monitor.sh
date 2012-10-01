@@ -8,7 +8,7 @@ fi
 port=9010
 ip=127.0.0.1
 scala_lib=/home/test-1/Documents/eclipse/configuration/org.eclipse.osgi/bundles/433/2/.cp/lib/scala-library.jar
-max_memory=3200m
+max_memory=5g
 interval=1
 
 outputfile=$1
