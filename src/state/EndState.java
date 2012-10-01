@@ -21,10 +21,6 @@ public class EndState implements State{
 	}
 
 	@Override
-	public void sendHeartbit(long time) {		
-	}
-
-	@Override
 	public void submitNext(Event e) {
 		generatedEvents.add(e);
 	}
@@ -45,6 +41,10 @@ public class EndState implements State{
 			Collection<ComplexEvent> newPartialMatches) {
 		generatedEvents.addAll(newPartialMatches);
 		
+	}
+
+	@Override
+	public void pumpHeartbeat(long heartbeat) {
 	}
 
 }

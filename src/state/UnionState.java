@@ -36,13 +36,6 @@ public class UnionState implements State {
 	}
 
 	@Override
-	public void sendHeartbit(long time) {
-		// Not required
-		// TODO does it need to propogate ?
-
-	}
-
-	@Override
 	public void submitNext(Event e) {
 		ComplexEvent ce;
 		if(e instanceof PrimaryEvent) {
@@ -88,6 +81,10 @@ public class UnionState implements State {
 			Collection<ComplexEvent> newPartialMatches) {
 		for(ComplexEvent ce : newPartialMatches)
 			submitNext(ce);
+	}
+
+	@Override
+	public void pumpHeartbeat(long heartbeat) {
 	}
 
 }

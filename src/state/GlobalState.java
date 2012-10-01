@@ -1,9 +1,13 @@
 package state;
 
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+
+import time.timestamp.IntervalTimeStamp;
+import time.timestamp.TimeStamp;
 
 import event.Event;
 import event.EventClass;
@@ -12,15 +16,17 @@ public class GlobalState {
 	Map<String, EventClass> knownEventClasses;
 	Map<String, List<State>> inputEventToStates;
 	Map<String, State> generatedEventClassToState;
+	List<State> allStates;
 	
 	private static GlobalState instance;
 	
 	private static List<State> emptyList = new LinkedList<State>();
 	
 	private GlobalState() {
-		knownEventClasses = new TreeMap<String, EventClass>();
-		inputEventToStates = new TreeMap<String, List<State>>();
-		generatedEventClassToState = new TreeMap<String, State>();
+		knownEventClasses = new HashMap<String, EventClass>();
+		inputEventToStates = new HashMap<String, List<State>>();
+		generatedEventClassToState = new HashMap<String, State>();
+		allStates=new LinkedList<State>();
 	}
 	
 	public static GlobalState getInstance() {
@@ -81,6 +87,21 @@ public class GlobalState {
 		for(State s:getStatesForInputEventClass(e.getEventClass())) {
 			s.submitNext(e);
 		}
+	}
+
+	public void submitHeartbeat(TimeStamp timeStamp) {
+		long heartbeat=0;
+		if(timeStamp instanceof IntervalTimeStamp)
+			heartbeat=((IntervalTimeStamp)timeStamp).getEndTime();
+		else
+			throw new RuntimeException("Unknown timestamp type");
+		for(State s:allStates) {
+			s.pumpHeartbeat(heartbeat);
+		}
+	}
+
+	public void registerStateForHeartBeat(State s) {
+		allStates.add(s);
 	}
 	
 }

@@ -10,7 +10,8 @@ import event.EventClass;
 public interface State {
 	public void submitNext(Event e);
 	public EventClass getOutputEventClass();
-	public void sendHeartbit(long time);
+	//public void sendHeartbit(long time);
 	public void setPredicate(String predicate);
 	public void propogatePartialMatches(Collection<ComplexEvent> newPartialMatches);
+	public void pumpHeartbeat(long heartbeat);
 }

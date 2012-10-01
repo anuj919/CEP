@@ -104,10 +104,10 @@ public class GenerateRandomEvents {
 		String inputFilePath = "spec.txt";
 		String outputFilePath = "events.txt";
 		GenerateRandomEvents generator = new GenerateRandomEvents(inputFilePath);
-		//IntegerDistribution dist = new UniformIntegerDistribution(0,generator.getNumEventClasses()-1);
+		IntegerDistribution dist = new UniformIntegerDistribution(0,generator.getNumEventClasses()-1);
 		
 		// Distribution for selecting eventclasses
-		IntegerDistribution dist = new BinomialDistribution(generator.getNumEventClasses(), 0.2);
+		//IntegerDistribution dist = new BinomialDistribution(generator.getNumEventClasses(), 0.2);
 		IntegerDistribution timeStampDist = new PoissonDistribution(1);
 		generator.setDistribution(dist);
 		

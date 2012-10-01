@@ -23,6 +23,7 @@ import state.State;
 import testdatagenerator.GenerateRandomEvents;
 import testdatagenerator.parser.ParseException;
 import time.timestamp.IntervalTimeStamp;
+import time.timestamp.TimeStamp;
 import evaluator.Evaluator;
 import evaluator.JaninoEvalFactory;
 import event.Event;
@@ -105,6 +106,8 @@ public class TestConcurrentStateWithAutomatonNoReuse {
 		List<PrimaryEvent> currentBatch = new LinkedList<PrimaryEvent>();
 		long generatedEvents=0;
 		long prev=0,i=0;
+		TimeStamp lastts=new IntervalTimeStamp(-1l, -1l);
+		int eventFlushPeriod=300;
 		
 		
 		for(int j=0;j<repeat;j++)
@@ -117,6 +120,12 @@ public class TestConcurrentStateWithAutomatonNoReuse {
 				if(i%(testcases/100) == 0)
 					System.out.println(i+" events injected");
 				Event e = currentBatch.get(k);
+				
+				if(i%eventFlushPeriod==0) {
+					globalState.submitHeartbeat(lastts);
+				}
+				lastts=e.getTimeStamp();
+				
 				//System.out.println(e);
 				globalState.submitNext(e);
 				endState.getGeneratedEvents(generatedEveList);

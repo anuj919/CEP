@@ -94,7 +94,7 @@ public class ConcurrentState implements State {
 	
 	public void submitNext(Event e) {
 		EventClass eClass = e.getEventClass();
-		sendHeartbit(e.getTimeStamp()); 	// Assuming events are submitted in total order
+		consumeHeartbit(e.getTimeStamp()); 	// Assuming events are submitted in total order
 		List<ComplexEvent> toNextStateList = new LinkedList<ComplexEvent>();
 		List<ComplexEvent> toBeAddedList = new LinkedList<ComplexEvent>();
 		//for(EventClass waitingFor : table.rowKeySet() ) {
@@ -169,16 +169,16 @@ public class ConcurrentState implements State {
 	}
 	
 	// This is just a wrapper around sendHeartbit(long) for TimeStamp
-	private void sendHeartbit(TimeStamp ts) {
+	private void consumeHeartbit(TimeStamp ts) {
 		if (ts instanceof IntervalTimeStamp) {
 			IntervalTimeStamp its = (IntervalTimeStamp) ts;
-			sendHeartbit(its.getEndTime());
+			consumeHeartbit(its.getEndTime());
 		}
 		else
 			assert false;
 	}
 	
-	public void sendHeartbit(long time) {
+	private void consumeHeartbit(long time) {
 		TimeStamp newHeartbit = tm.getPointBasedTimeStamp(time);
 		if(newHeartbit.compareTo(lastHearbitTimeStamp)!=0)
 			cachedEvents.clear();
@@ -196,6 +196,11 @@ public class ConcurrentState implements State {
 			Collection<ComplexEvent> newPartialMatches) {
 		throw new UnsupportedOperationException();
 		
+	}
+
+	@Override
+	public void pumpHeartbeat(long heartbeat) {
+		// it already does it
 	}
 
 }

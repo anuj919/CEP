@@ -1,29 +1,20 @@
 package state;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import datastructures.SortedTreeList;
 
 import time.timemodel.TimeModel;
 import time.timestamp.IntervalTimeStamp;
 import time.timestamp.TimeStamp;
-
 import evaluator.Evaluator;
 import evaluator.JaninoEvalFactory;
 import event.ComplexEvent;
 import event.Event;
 import event.EventClass;
-import event.eventtype.ComplexEventType;
 import event.util.Policies;
 
 public class SequenceState implements State {
@@ -38,7 +29,7 @@ public class SequenceState implements State {
 	GlobalState globalState;
 	
 	
-	SortedTreeList<ComplexEvent> partialMatches;
+	List<ComplexEvent> partialMatches;
 	Evaluator evaluator;
 	Comparator<ComplexEvent> timeBasedComparator ;
 	TimeStamp lastHearbitTimeStamp;
@@ -59,7 +50,8 @@ public class SequenceState implements State {
 		this.tm = Policies.getInstance().getTimeModel();
 		this.lastHearbitTimeStamp = tm.getPointBasedTimeStamp(0);
 		this.identifier = "Seq"+instanceCount.incrementAndGet();
-		this.partialMatches = new SortedTreeList<ComplexEvent>(timeBasedComparator);
+		//this.partialMatches = new SortedTreeList<ComplexEvent>(timeBasedComparator);
+		this.partialMatches = new LinkedList<ComplexEvent>();
 		this.evaluator = evaluator;
 		this.firstState = false;
 		this.publishResult = publishResult;
@@ -67,6 +59,7 @@ public class SequenceState implements State {
 		globalState = GlobalState.getInstance();
 		if(publishResult)
 			globalState.registerOuputEventClassToState(outputEventClass, this);
+		globalState.registerStateForHeartBeat(this);
 	}
 	
 	public void setFirstState(boolean first) {
@@ -88,17 +81,16 @@ public class SequenceState implements State {
 	}
 	
 	// This is just a wrapper around sendHeartbit(long) for TimeStamp
-	private void sendHeartbit(TimeStamp ts) {
+	private void consumeHeartbit(TimeStamp ts) {
 		if (ts instanceof IntervalTimeStamp) {
 			IntervalTimeStamp its = (IntervalTimeStamp) ts;
-			sendHeartbit(its.getEndTime());
+			consumeHeartbit(its.getEndTime());
 		}
 		else
 			assert false;
 	}
 
-	@Override
-	public void sendHeartbit(long time) {
+	private void consumeHeartbit(long time) {
 		TimeStamp newHeartbit = tm.getPointBasedTimeStamp(time);
 		if(newHeartbit.compareTo(lastHearbitTimeStamp)!=0)
 			cachedEvents.clear();
@@ -108,7 +100,7 @@ public class SequenceState implements State {
 	@Override
 	public void submitNext(Event e) {
 		EventClass eClass = e.getEventClass();
-		sendHeartbit(e.getTimeStamp());		// Assuming events are submitted in total order
+		consumeHeartbit(e.getTimeStamp());		// Assuming events are submitted in total order
 		List<ComplexEvent> toNextStateList = new LinkedList<ComplexEvent>();
 		cachedEvents.add(e);
 		
@@ -170,9 +162,9 @@ public class SequenceState implements State {
 	public void propogatePartialMatches(Collection<ComplexEvent> newPartialMatches) {
 		List<ComplexEvent> toNextStateList= new LinkedList<ComplexEvent>();
 		for(ComplexEvent ce : newPartialMatches)
-			sendHeartbit(ce.getTimeStamp());
+			consumeHeartbit(ce.getTimeStamp());
 	
-		// TODO Check if it can match with existing cached events, also add to partial matches
+		//  Check if it can match with existing cached events, also add to partial matches
 		
 		
 		for(Event cachedEvent : cachedEvents) {
@@ -204,7 +196,6 @@ public class SequenceState implements State {
 		}
 		
 		partialMatches.addAll(newPartialMatches);
-		//TODO Do NOT update lastHeartbit timestamp here
 		if(toNextStateList.size()>0) {
 			for(State state: nextStates)
 				state.propogatePartialMatches(toNextStateList);
@@ -232,5 +223,20 @@ public class SequenceState implements State {
 
 	public void setEvaluator(Evaluator evaluator) {
 		this.evaluator = evaluator;
+	}
+
+	@Override
+	public void pumpHeartbeat(long heartbeat) {
+		consumeHeartbit(heartbeat);
+		for(Iterator<ComplexEvent> itr=partialMatches.iterator(); itr.hasNext();) {
+			ComplexEvent partialMatch = itr.next();
+			
+			//check if the partial match is expired?
+			int result = tm.getTimeStampComparator().compare(lastHearbitTimeStamp, partialMatch.getPermissibleTimeWindowTill());
+			if(result>0) { //expired
+				itr.remove();
+				continue;
+			}
+		}
 	}
 }
