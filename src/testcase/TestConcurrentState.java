@@ -99,8 +99,11 @@ public class TestConcurrentState {
 		for(int j=0;j<repeat;j++)
 		while(i<testcases) {
 			currentBatch.clear();
-			for(int k=0;k<batchSize;k++)
+			for(int k=0;k<batchSize;k++) {
+				long t1=System.nanoTime();
 				currentBatch.add(kryo.readObjectOrNull(input, PrimaryEvent.class));
+				System.out.println("Time to read from file: "+(System.nanoTime()-t1));
+			}
 			
 			for(int k=0;k<batchSize && i<testcases;k++,i++) {
 				if(i%(testcases/100) == 0)
