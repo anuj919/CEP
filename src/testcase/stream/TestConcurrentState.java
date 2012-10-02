@@ -99,7 +99,8 @@ public class TestConcurrentState {
 		{			
 			if(i%100 == 0) {
 				long dropped=eventReader.getDropCount();
-				System.out.println("Injected: "+i+" Dropped: "+dropped+" Generated: "+generatedEvents);
+				long total=eventReader.getTotalRecievedCount();
+				System.out.println("Injected: "+i+" Dropped: "+dropped+"/"+total +" Generated: "+generatedEvents);
 			}
 			Event e;
 			try {

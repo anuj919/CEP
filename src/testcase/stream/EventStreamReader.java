@@ -42,4 +42,8 @@ public class EventStreamReader implements Runnable {
 	public long getDropCount() {
 		return droppedCount;
 	}
+	
+	public long getTotalRecievedCount() {
+		return receivedCount;
+	}
 }
