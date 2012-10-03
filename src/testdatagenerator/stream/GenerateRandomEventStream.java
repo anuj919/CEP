@@ -21,6 +21,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.StandardSocketOptions;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -112,11 +113,15 @@ public class GenerateRandomEventStream {
 	
 	public static void main(String[] args) throws ParseException, UnknownHostException, IOException {
 		String inputFilePath = "spec.txt";
-		if(args.length!=1) {
+		if(args.length<1 || args.length>2) {
 			System.err.println("Arguments: <event-rate>");
 			System.exit(1);
 		}
 		int rate=Integer.parseInt(args[0]);
+		int testcases=Integer.MAX_VALUE;
+		if(args.length==2) {
+			testcases=Integer.parseInt(args[1]);
+		}
 		long timePerEventInns=1000000000/rate;
 		int queueSize=10000;
 		
@@ -160,38 +165,60 @@ public class GenerateRandomEventStream {
 			output.flush();
 			System.out.println("Sent eventclasses");
 			
+			kryo.writeObject(output, new Integer(rate));
+			output.flush();
+			
 			String goAhead = kryo.readObject(input, String.class);
 			long time=0;
 			long startEvent,endEvent;
-			for(int i=0;;i++) {
+			int BATCH_SIZE=100;
+			ArrayList<PrimaryEvent> list=new ArrayList<PrimaryEvent>(BATCH_SIZE);
+			
+			long startTime=System.nanoTime();
+			int i=0;
+			for(;i<testcases;) {
 				startEvent=System.nanoTime();
 				//Event e = queue.take();
-				Event e=generator.generateEvent();
-				time+=timeStampDist.sample();
-				time++;
-				e.setTimeStamp(new IntervalTimeStamp(time,time));
+				
+				for(int j=0;j<BATCH_SIZE && i<testcases;j++,i++) {
+					PrimaryEvent e=generator.generateEvent();
+					time+=timeStampDist.sample();
+					time++;
+					e.setTimeStamp(new IntervalTimeStamp(time,time));
+					list.add(e);
+				}
 				//System.out.println("Time to take event from queue:"+(System.nanoTime()-startEvent));
 				//System.out.println(e);
+				
+				
+				
 				try{
-					kryo.writeObject(output, e);
+					kryo.writeObject(output, list);
 					output.flush();
 				} catch(KryoException ke) {
 					System.out.println("Client "+clientSocket.getRemoteSocketAddress() +"disconnecting...");
 					break;
 				}
 				
-				if(i%100==0)
+				if(i%1000==0)
 					System.out.println(i+" Events generated..");
 				endEvent=System.nanoTime();
 				//System.out.println("Time to send an event:"+(endEvent-startEvent));
-				long sleepTime=(int)(timePerEventInns-(endEvent-startEvent))/1000000;
+				long sleepTime=(timePerEventInns*BATCH_SIZE-(endEvent-startEvent))/1000000;
+				System.err.println("TimeFor100events="+timePerEventInns*100/1000+"Consumed time for 100 events="+(endEvent-startEvent)/1000+" SleepTime= "+sleepTime);
 				if(sleepTime<0) {
-					System.out.println((endEvent-startEvent)+"<"+timePerEventInns+ " so not sleeping");
+					System.out.println((endEvent-startEvent)+"<"+timePerEventInns*BATCH_SIZE+ " so not sleeping");
+					list.clear();
 					continue;
 				}
+				
 				Thread.sleep(sleepTime);
+				list.clear();
 			}
+			System.out.println("Generated "+i+" events in "+(System.nanoTime()-startTime)/1000000+"ms");
 		}
+		
+		
 		
 		} catch(Exception e) {
 			e.printStackTrace();
