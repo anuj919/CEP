@@ -5,7 +5,7 @@ then
     exit 1
 fi
 
-max_memory=1g
+max_memory=4g
 
 java -cp bin:$(echo ../lib/*.jar | tr ' ' ':') -Xms64m -Xmx$max_memory "$@"
 

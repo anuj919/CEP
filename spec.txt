@@ -5,8 +5,5 @@ E4 {a:Integer:UniformInteger(0,5)}
 E5 {a:Integer:UniformInteger(0,10), b:Double:Normal(5.0, 2.0)}
 E6 {a:Integer:UniformInteger(0,10)}
 E7 {a:Integer:UniformInteger(0,10)}
-E8 {a:Integer:UniformInteger(0,10), b:Double:Normal(6.0,2.5)}
+E8 {a:Integer:UniformInteger(0,10)}
 E9 {a:Integer:UniformInteger(0,10)}
-E10 {a:Integer:UniformInteger(0,10)}
-E11 {a:Integer:UniformInteger(0,10)}
-

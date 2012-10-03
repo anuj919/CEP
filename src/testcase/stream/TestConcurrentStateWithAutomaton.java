@@ -87,8 +87,11 @@ public class TestConcurrentStateWithAutomaton {
 		globalState.registerInputEventClassToState(lastState.getOutputEventClass(), endState);
 		System.out.println("Done setting up the automaton..");
 		
-		int queueSize=1000;
-		EventStreamReader eventReader=new EventStreamReader(kryo, input, queueSize);
+		Integer rate=kryo.readObject(input, Integer.class);
+		System.out.println("Received Rate="+rate);
+		
+		int queueSize=3000;
+		EventStreamReader eventReader=new EventStreamReader(kryo, input, queueSize,rate);
 		BlockingQueue<PrimaryEvent> queue=eventReader.getInputQueue();
 		new Thread(eventReader).start();
 		
@@ -101,21 +104,26 @@ public class TestConcurrentStateWithAutomaton {
                 
 		for(int i=0;;i++)
 		{			
-			if(i%100 == 0) {
-				long dropped=eventReader.getDropCount();
-				long total=eventReader.getTotalRecievedCount();
-				System.out.println("Injected: "+i+" Dropped: "+dropped+"/"+total +" Generated: "+generatedEvents);
+			if(i%1000 == 0) {
+				System.out.println("Injected: "+i+" Generated: "+generatedEvents);
 			}
 			Event e;
+			long t1=System.nanoTime();
 			try {
 				e = queue.take();
 			} catch (InterruptedException e1) {
 				e1.printStackTrace();
 				break;
 			}
+			
+			//e=kryo.readObject(input, PrimaryEvent.class);
+			long t2=System.nanoTime();
 			//System.out.println(e);
+			
 			globalState.submitNext(e);
 			endState.getGeneratedEvents(generatedEveList);
+			long t3=System.nanoTime();
+			System.err.println("Dequeue time: "+(t2-t1)+" Processing time: "+(t3-t2) );
 			generatedEvents+=generatedEveList.size();
 			//if(generatedEvents-prev>1000) {
 			//	System.out.println("****"+generatedEvents+" events generated****");
