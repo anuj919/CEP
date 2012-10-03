@@ -2,14 +2,13 @@ package event;
 
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import scala.Tuple2;
 import scala.collection.JavaConversions;
-import scala.collection.immutable.List$;
-import scala.collection.immutable.Map;
-import scala.collection.immutable.Map$;
+import scala.collection.immutable.*;
 import time.timestamp.IntervalTimeStamp;
 import time.timestamp.TimeStamp;
 import event.util.Policies;
@@ -23,8 +22,7 @@ public class ComplexEvent extends Event  {
 	protected TimeStamp timestamp;
 	protected scala.collection.immutable.List<Event> constituents; 
 	protected java.util.List<Event> constituentsInJava;
-	protected Map<String,scala.collection.immutable.List<Event> > eventClassNamesToEvents;
-	protected java.util.Map<String,scala.collection.immutable.List<Event> > eventClassNamesToEventsInJava;
+	protected scala.collection.immutable.HashSet<String> constitutingEventClasses;
 	
 	protected TimeStamp permissibleWindow;
 	//private Event endEvent;
@@ -41,8 +39,7 @@ public class ComplexEvent extends Event  {
 		newEvent.timestamp = ce.timestamp.deepCopy();
 		newEvent.constituents = ce.constituents;
 		newEvent.constituentsInJava = ce.constituentsInJava;
-		newEvent.eventClassNamesToEvents = ce.eventClassNamesToEvents;
-		newEvent.eventClassNamesToEventsInJava = ce.eventClassNamesToEventsInJava;
+		newEvent.constitutingEventClasses = ce.constitutingEventClasses;
 		newEvent.permissibleWindow = (IntervalTimeStamp)ce.permissibleWindow.deepCopy();
 		newEvent.endsBy = ce.endsBy;
 		newEvent.consumed=ce.consumed;
@@ -53,8 +50,7 @@ public class ComplexEvent extends Event  {
 		this.eventClass = eventClass;
 		constituents = List$.MODULE$.empty();
 		constituentsInJava = Collections.emptyList();
-		eventClassNamesToEvents = Map$.MODULE$.empty();
-		eventClassNamesToEventsInJava = Collections.emptyMap();
+		constitutingEventClasses = new HashSet<String>();
 		atomicInt = new AtomicInteger();
 		consumed=false;
 	}
@@ -73,7 +69,10 @@ public class ComplexEvent extends Event  {
 		if (e instanceof PrimaryEvent) {
 			constituents=constituents.$colon$colon(e);
 			constituentsInJava = JavaConversions.seqAsJavaList(constituents);
-			addToMultiList(e);
+			if(!constitutingEventClasses.contains(e.getEventClass().getName()))
+				constitutingEventClasses = constitutingEventClasses.$plus(e.getEventClass().getName());
+				
+			//addToMultiList(e);
 			updateTimeStamp(e);
 		} else {
 			ComplexEvent ce = (ComplexEvent) e;
@@ -83,7 +82,9 @@ public class ComplexEvent extends Event  {
 			for(Event e1 : peList) {
 				PrimaryEvent pe = (PrimaryEvent) e1;
 				//constituents=constituents.$colon$colon(e1);
-				addToMultiList(pe);
+				//addToMultiList(pe);
+				if(!constitutingEventClasses.contains(pe.getEventClass().getName()))
+					constitutingEventClasses = constitutingEventClasses.$plus(pe.getEventClass().getName());
 				updateTimeStamp(pe);
 			}
 		}
@@ -101,18 +102,6 @@ public class ComplexEvent extends Event  {
 			timestamp = Policies.getInstance().getTimeModel().combine(timestamp, e.getTimeStamp());
 		}
 	}
-
-	private void addToMultiList(Event e) {
-		String eventClassName = e.getEventClass().getName();
-		scala.collection.immutable.List<Event> list = null;
-		if(!eventClassNamesToEvents.contains(eventClassName)) {
-			list = List$.MODULE$.empty().$colon$colon(e); 
-		}
-		else
-			list=eventClassNamesToEvents.apply(eventClassName).$colon$colon(e);
-		eventClassNamesToEvents =  eventClassNamesToEvents.$plus(new Tuple2<String, scala.collection.immutable.List<Event>>(eventClassName, list));
-		eventClassNamesToEventsInJava = JavaConversions.mapAsJavaMap(eventClassNamesToEvents);
-	}
 	
 	// user has to specify EventClass[:NthInstance].AttrName
 	// NthInstance index starts from 1
@@ -125,16 +114,21 @@ public class ComplexEvent extends Event  {
 		int nthInstance = ((eventClassAndInstance.length==2) ? Integer.parseInt(eventClassAndInstance[1]) : 1)-1;
 		String attrName = eventClassAndAttr[1];
 		
-		//determine the referenced event
-		Event event = eventClassNamesToEventsInJava.get(eventClassName).apply(nthInstance);
-		
-		return event.getAttributeValue(attrName);
+		return getAttributeValue(eventClassName, nthInstance, attrName);
 	}
 	
 	public Object getAttributeValue(String eventClassName, int nthInstance, String attrName) throws NoSuchFieldException {
 		//determine the referenced event
-		Event event = eventClassNamesToEventsInJava.get(eventClassName).apply(nthInstance);
-		return event.getAttributeValue(attrName);
+		Iterator<Event> iterator = JavaConversions.asJavaIterator(constituents.reverseIterator());
+		for(;iterator.hasNext();) {
+			Event current=iterator.next();
+			if(current.getEventClass().name.equals(eventClassName)) {
+				nthInstance--;
+				if(nthInstance==0)
+					return current.getAttributeValue(attrName);
+			}
+		}
+		return null;
 	}
 	
 
@@ -169,8 +163,7 @@ public class ComplexEvent extends Event  {
 	}
 	
 	public boolean containsEventOfClass(String className) {
-		scala.collection.immutable.List<Event> listForClass = eventClassNamesToEventsInJava.get(className);
-		return listForClass!=null && !listForClass.isEmpty();
+		return constitutingEventClasses.contains(className);
 	}
 	
 	@Override

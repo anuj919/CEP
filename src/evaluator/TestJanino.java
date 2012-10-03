@@ -1,6 +1,8 @@
 package evaluator;
 import java.util.LinkedList;
 
+import time.timestamp.IntervalTimeStamp;
+
 import event.AttributeType;
 import event.ComplexEvent;
 import event.EventClass;
@@ -62,11 +64,16 @@ public class TestJanino {
 		EventClass ce_class = new EventClass("CE1",ce_type);
 		
 		PrimaryEvent e1 = new PrimaryEvent(ec1);
-		PrimaryEvent e2 = new PrimaryEvent(ec2);
+		PrimaryEvent e2 = new PrimaryEvent(ec1);
+		PrimaryEvent e3 = new PrimaryEvent(ec2);
+		e1.setTimeStamp(new IntervalTimeStamp(0l, 0l));
+		e2.setTimeStamp(new IntervalTimeStamp(0l, 0l));
+		e3.setTimeStamp(new IntervalTimeStamp(0l, 0l));
 		try {
 			//e1.addAttributeValue("a1", 10);
 			e1.addAttributeValue("price", 100);
-			e2.addAttributeValue("a2", 10);
+			e2.addAttributeValue("price", 200);
+			e3.addAttributeValue("a2", 10);
 			//e2.addAttributeValue("price", 20);
 		} catch (TypeMismatchException e) {
 			e.printStackTrace();
@@ -75,12 +82,21 @@ public class TestJanino {
 		ComplexEvent ce = new ComplexEvent(ce_class);
 		ce.addEvent(e1);
 		ce.addEvent(e2);
+		ce.addEvent(e3);
+		ce.setTimeStamp(new IntervalTimeStamp(0l, 0l));
 		try {
 			ce.getAttributeValue("E1.a1");
+			ce.getAttributeValue("E1",1,"a1");
 		} catch (NoSuchFieldException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		
+		long start=System.nanoTime();
+		ComplexEvent ce2= new ComplexEvent(ce_class);
+		ce2.addEvent(ce);
+		System.out.println(System.nanoTime()-start);
+		System.out.println(ce2);
 		
 		return ce;
 	}
