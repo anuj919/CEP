@@ -116,7 +116,7 @@ public class ComplexEvent extends Event  {
 			return null;
 		for(int i=0;i<nthInstance-1;i++)
 			buffer.remove();
-		return buffer.remove();
+		return ((Event)buffer.remove()).getAttributeValue(attrName);
 	}
 	
 	@Override
