@@ -85,8 +85,8 @@ public class TestJanino {
 		ce.addEvent(e3);
 		ce.setTimeStamp(new IntervalTimeStamp(0l, 0l));
 		try {
-			ce.getAttributeValue("E1.a1");
-			ce.getAttributeValue("E1",1,"a1");
+			System.out.println(ce.getAttributeValue("E1.price"));
+			System.out.println(ce.getAttributeValue("E1",2,"price"));
 		} catch (NoSuchFieldException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

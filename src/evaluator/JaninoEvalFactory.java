@@ -53,7 +53,7 @@ public class JaninoEvalFactory {
     		String[] eventClassAndInstance = eventClassAndAttr[0].split(":");
     		
     		String eventClassName = eventClassAndInstance[0];
-    		int nthInstance = ((eventClassAndInstance.length==2) ? Integer.parseInt(eventClassAndInstance[1]) : 1)-1;
+    		int nthInstance = ((eventClassAndInstance.length==2) ? Integer.parseInt(eventClassAndInstance[1]) : 1);
     		String attrName = eventClassAndAttr[1];
                         
             if(attrType!=null)

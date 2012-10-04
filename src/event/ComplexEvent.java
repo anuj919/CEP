@@ -22,7 +22,7 @@ public class ComplexEvent extends Event  {
 	protected TimeStamp timestamp;
 	protected scala.collection.immutable.List<Event> constituents; 
 	protected java.util.List<Event> constituentsInJava;
-	protected scala.collection.immutable.HashSet<String> constitutingEventClasses;
+	protected scala.collection.immutable.List<String> constitutingEventClasses;
 	
 	protected TimeStamp permissibleWindow;
 	//private Event endEvent;
@@ -50,7 +50,7 @@ public class ComplexEvent extends Event  {
 		this.eventClass = eventClass;
 		constituents = List$.MODULE$.empty();
 		constituentsInJava = Collections.emptyList();
-		constitutingEventClasses = new HashSet<String>();
+		constitutingEventClasses = List$.MODULE$.empty();
 		atomicInt = new AtomicInteger();
 		consumed=false;
 	}
@@ -67,26 +67,16 @@ public class ComplexEvent extends Event  {
 	
 	public int addEvent(Event e) {
 		if (e instanceof PrimaryEvent) {
-			constituents=constituents.$colon$colon(e);
+			constituents=$colon$colon$.MODULE$.apply(e,constituents);
 			constituentsInJava = JavaConversions.seqAsJavaList(constituents);
 			if(!constitutingEventClasses.contains(e.getEventClass().getName()))
-				constitutingEventClasses = constitutingEventClasses.$plus(e.getEventClass().getName());
-				
-			//addToMultiList(e);
+				constitutingEventClasses = $colon$colon$.MODULE$.apply(e.getEventClass().getName(),constitutingEventClasses);
 			updateTimeStamp(e);
 		} else {
 			ComplexEvent ce = (ComplexEvent) e;
 			List<Event> peList = ce.getConstitutingEvents();
-			constituents = constituents.$colon$colon$colon(ce.constituents);
-			constituentsInJava = JavaConversions.seqAsJavaList(constituents);
-			for(Event e1 : peList) {
-				PrimaryEvent pe = (PrimaryEvent) e1;
-				//constituents=constituents.$colon$colon(e1);
-				//addToMultiList(pe);
-				if(!constitutingEventClasses.contains(pe.getEventClass().getName()))
-					constitutingEventClasses = constitutingEventClasses.$plus(pe.getEventClass().getName());
-				updateTimeStamp(pe);
-			}
+			for(Event pe: peList)
+				addEvent(pe);
 		}
 		return constituents.size();
 	}
@@ -111,7 +101,7 @@ public class ComplexEvent extends Event  {
 		String[] eventClassAndInstance = eventClassAndAttr[0].split(":");
 		
 		String eventClassName = eventClassAndInstance[0];
-		int nthInstance = ((eventClassAndInstance.length==2) ? Integer.parseInt(eventClassAndInstance[1]) : 1)-1;
+		int nthInstance = ((eventClassAndInstance.length==2) ? Integer.parseInt(eventClassAndInstance[1]) : 1);
 		String attrName = eventClassAndAttr[1];
 		
 		return getAttributeValue(eventClassName, nthInstance, attrName);
