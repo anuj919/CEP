@@ -137,7 +137,7 @@ public class TestConcurrentStateWithAutomaton {
 					prev=generatedEvents;
 				}
 				//if(generatedEveList.size()>0)
-				//	System.out.println("*******"+generatedEveList+"*******");
+				//	System.out.println(generatedEveList.size()+"*******"+generatedEveList+"*******");
 				generatedEveList.clear();
 			}
 		}
