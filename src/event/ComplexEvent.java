@@ -1,18 +1,18 @@
 package event;
 
-import java.util.Collections;
 import java.util.Comparator;
-import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import scala.Tuple2;
-import scala.collection.JavaConversions;
-import scala.collection.immutable.*;
+import org.apache.commons.collections.buffer.CircularFifoBuffer;
+import org.pcollections.ConsPStack;
+import org.pcollections.HashTreePSet;
+import org.pcollections.PSet;
+import org.pcollections.PStack;
+
 import time.timestamp.IntervalTimeStamp;
 import time.timestamp.TimeStamp;
 import event.util.Policies;
-
 
 
 @SuppressWarnings("serial")
@@ -20,9 +20,8 @@ public class ComplexEvent extends Event  {
 	//private int eventId;
 	protected EventClass eventClass;
 	protected TimeStamp timestamp;
-	protected scala.collection.immutable.List<Event> constituents; 
-	protected java.util.List<Event> constituentsInJava;
-	protected scala.collection.immutable.List<String> constitutingEventClasses;
+	protected PStack<Event> constituents; 
+	protected PSet<String> constitutingEventClasses;
 	
 	protected TimeStamp permissibleWindow;
 	//private Event endEvent;
@@ -38,7 +37,6 @@ public class ComplexEvent extends Event  {
 		ComplexEvent newEvent = new ComplexEvent(ce.getEventClass());
 		newEvent.timestamp = ce.timestamp.deepCopy();
 		newEvent.constituents = ce.constituents;
-		newEvent.constituentsInJava = ce.constituentsInJava;
 		newEvent.constitutingEventClasses = ce.constitutingEventClasses;
 		newEvent.permissibleWindow = (IntervalTimeStamp)ce.permissibleWindow.deepCopy();
 		newEvent.endsBy = ce.endsBy;
@@ -48,9 +46,8 @@ public class ComplexEvent extends Event  {
 	
 	public ComplexEvent(EventClass eventClass) {
 		this.eventClass = eventClass;
-		constituents = List$.MODULE$.empty();
-		constituentsInJava = Collections.emptyList();
-		constitutingEventClasses = List$.MODULE$.empty();
+		constituents = ConsPStack.empty();
+		constitutingEventClasses = HashTreePSet.empty();
 		atomicInt = new AtomicInteger();
 		consumed=false;
 	}
@@ -67,10 +64,9 @@ public class ComplexEvent extends Event  {
 	
 	public int addEvent(Event e) {
 		if (e instanceof PrimaryEvent) {
-			constituents=$colon$colon$.MODULE$.apply(e,constituents);
-			constituentsInJava = JavaConversions.seqAsJavaList(constituents);
+			constituents=constituents.plus(e);
 			if(!constitutingEventClasses.contains(e.getEventClass().getName()))
-				constitutingEventClasses = $colon$colon$.MODULE$.apply(e.getEventClass().getName(),constitutingEventClasses);
+				constitutingEventClasses = constitutingEventClasses.plus(e.getEventClass().getName());;
 			updateTimeStamp(e);
 		} else {
 			ComplexEvent ce = (ComplexEvent) e;
@@ -82,7 +78,7 @@ public class ComplexEvent extends Event  {
 	}
 	
 	public List<Event> getConstitutingEvents() {
-		return constituentsInJava;
+		return constituents;
 	}
 	
 	private void updateTimeStamp(Event e) {
@@ -109,19 +105,20 @@ public class ComplexEvent extends Event  {
 	
 	public Object getAttributeValue(String eventClassName, int nthInstance, String attrName) throws NoSuchFieldException {
 		//determine the referenced event
-		Iterator<Event> iterator = JavaConversions.asJavaIterator(constituents.reverseIterator());
-		for(;iterator.hasNext();) {
-			Event current=iterator.next();
+		CircularFifoBuffer buffer = new CircularFifoBuffer(nthInstance);
+
+		for(Event current:constituents) {
 			if(current.getEventClass().name.equals(eventClassName)) {
-				nthInstance--;
-				if(nthInstance==0)
-					return current.getAttributeValue(attrName);
+				buffer.add(current);
 			}
 		}
-		return null;
+		if(buffer.size()<nthInstance)
+			return null;
+		for(int i=0;i<nthInstance-1;i++)
+			buffer.remove();
+		return buffer.remove();
 	}
 	
-
 	@Override
 	public EventClass getEventClass() {
 		return eventClass;
@@ -159,7 +156,7 @@ public class ComplexEvent extends Event  {
 	@Override
 	public String toString() {
 		StringBuffer str= new StringBuffer("{");
-		for(Event e:JavaConversions.seqAsJavaList(constituents)) {
+		for(Event e:constituents) {
 			str.append(e);
 			str.append(",");
 		}
@@ -172,7 +169,7 @@ public class ComplexEvent extends Event  {
 		if(consumed)
 			return true;
 		// otherwise check all constituents
-		for(Event e:constituentsInJava) {
+		for(Event e:constituents) {
 			if(e.isConsumed())
 				consumed=true;
 		}
@@ -181,7 +178,7 @@ public class ComplexEvent extends Event  {
 
 	public void setConsumed(boolean consumed) {
 		assert consumed;
-		for(Event e:constituentsInJava) {
+		for(Event e:constituents) {
 			e.setConsumed(true);
 		}
 		this.consumed = consumed;
