@@ -16,7 +16,7 @@ public class TestJanino {
 
 	
 	public static void main(String[] args) throws NoSuchFieldException, InterruptedException {
-		int testcases=1;
+		int testcases=1000;
 		
 		
 		
@@ -93,14 +93,17 @@ public class TestJanino {
 		PrimaryEvent e1 = new PrimaryEvent(ec1);
 		PrimaryEvent e2 = new PrimaryEvent(ec2);
 		PrimaryEvent e3 = new PrimaryEvent(ec3);
+		PrimaryEvent e4 = new PrimaryEvent(ec4);
 		e1.setTimeStamp(new IntervalTimeStamp(0l, 0l));
 		e2.setTimeStamp(new IntervalTimeStamp(0l, 0l));
 		e3.setTimeStamp(new IntervalTimeStamp(0l, 0l));
+		e4.setTimeStamp(new IntervalTimeStamp(0l, 0l));
 		try {
 			//e1.addAttributeValue("a1", 10);
 			e1.addAttributeValue("a", 2.693634799645854);
 			e2.addAttributeValue("a", 1.2031368292642761);
 			e3.addAttributeValue("a", 1);
+			e4.addAttributeValue("a", 1);
 			//e2.addAttributeValue("price", 20);
 		} catch (TypeMismatchException e) {
 			e.printStackTrace();
@@ -110,11 +113,13 @@ public class TestJanino {
 		ce.addEvent(e1);
 		ce.addEvent(e2);
 		ce.addEvent(e3);
+		ce.addEvent(e4);
 		ce.setTimeStamp(new IntervalTimeStamp(0l, 0l));
 		try {
 			System.out.println(ce.getAttributeValue("E1.a"));
 			System.out.println(ce.getAttributeValue("E2",1,"a"));
 			System.out.println(ce.getAttributeValue("E3",1,"a"));
+			System.out.println(ce.getAttributeValue("E4",1,"a"));
 		} catch (NoSuchFieldException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

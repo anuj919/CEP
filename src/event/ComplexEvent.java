@@ -1,7 +1,9 @@
 package event;
 
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.collections.buffer.CircularFifoBuffer;
@@ -21,6 +23,7 @@ public class ComplexEvent extends Event  {
 	protected EventClass eventClass;
 	protected TimeStamp timestamp;
 	protected PStack<Event> constituents; 
+	protected Map<String,PStack<Event>> eventClassToEvents;
 	protected PSet<String> constitutingEventClasses;
 	
 	protected TimeStamp permissibleWindow;
@@ -39,6 +42,7 @@ public class ComplexEvent extends Event  {
 		newEvent.constituents = ce.constituents;
 		newEvent.constitutingEventClasses = ce.constitutingEventClasses;
 		newEvent.permissibleWindow = (IntervalTimeStamp)ce.permissibleWindow.deepCopy();
+		newEvent.eventClassToEvents= new HashMap<String, PStack<Event>>(ce.eventClassToEvents);
 		newEvent.endsBy = ce.endsBy;
 		newEvent.consumed=ce.consumed;
 		return newEvent;
@@ -49,6 +53,7 @@ public class ComplexEvent extends Event  {
 		constituents = ConsPStack.empty();
 		constitutingEventClasses = HashTreePSet.empty();
 		atomicInt = new AtomicInteger();
+		eventClassToEvents= new HashMap<String, PStack<Event>>();
 		consumed=false;
 	}
 	
@@ -65,8 +70,14 @@ public class ComplexEvent extends Event  {
 	public int addEvent(Event e) {
 		if (e instanceof PrimaryEvent) {
 			constituents=constituents.plus(e);
-			if(!constitutingEventClasses.contains(e.getEventClass().getName()))
-				constitutingEventClasses = constitutingEventClasses.plus(e.getEventClass().getName());;
+			//if(!constitutingEventClasses.contains(e.getEventClass().getName()))
+			//	constitutingEventClasses = constitutingEventClasses.plus(e.getEventClass().getName());;
+			PStack<Event> list=eventClassToEvents.get(e.getEventClass().getName());
+			if(list==null)
+				list=ConsPStack.singleton(e);
+			else
+				list=list.plus(e);
+			eventClassToEvents.put(e.getEventClass().getName(), list);
 			updateTimeStamp(e);
 		} else {
 			ComplexEvent ce = (ComplexEvent) e;
@@ -103,9 +114,10 @@ public class ComplexEvent extends Event  {
 		return getAttributeValue(eventClassName, nthInstance, attrName);
 	}
 	
+	// nthIntance index starts from 1
 	public Object getAttributeValue(String eventClassName, int nthInstance, String attrName) throws NoSuchFieldException {
 		//determine the referenced event
-		CircularFifoBuffer buffer = new CircularFifoBuffer(nthInstance);
+		/*CircularFifoBuffer buffer = new CircularFifoBuffer(nthInstance);
 
 		for(Event current:constituents) {
 			if(current.getEventClass().name.equals(eventClassName)) {
@@ -116,7 +128,12 @@ public class ComplexEvent extends Event  {
 			return null;
 		for(int i=0;i<nthInstance-1;i++)
 			buffer.remove();
-		return ((Event)buffer.remove()).getAttributeValue(attrName);
+		return ((Event)buffer.remove()).getAttributeValue(attrName); */
+		
+		PStack<Event> list=eventClassToEvents.get(eventClassName);
+		if(list==null || list.size()-nthInstance < 0)
+			return null;
+		return list.get(list.size()-nthInstance).getAttributeValue(attrName);  
 	}
 	
 	@Override
