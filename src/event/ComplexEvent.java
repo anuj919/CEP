@@ -2,15 +2,10 @@ package event;
 
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import org.apache.commons.collections.buffer.CircularFifoBuffer;
-import org.pcollections.ConsPStack;
-import org.pcollections.HashTreePSet;
-import org.pcollections.PSet;
-import org.pcollections.PStack;
 
 import time.timestamp.IntervalTimeStamp;
 import time.timestamp.TimeStamp;
@@ -22,9 +17,8 @@ public class ComplexEvent extends Event  {
 	//private int eventId;
 	protected EventClass eventClass;
 	protected TimeStamp timestamp;
-	protected PStack<Event> constituents; 
-	protected Map<String,PStack<Event>> eventClassToEvents;
-	protected PSet<String> constitutingEventClasses;
+	protected List<Event> constituents; 
+	protected Map<String,List<Event>> eventClassToEvents;
 	
 	protected TimeStamp permissibleWindow;
 	//private Event endEvent;
@@ -39,10 +33,13 @@ public class ComplexEvent extends Event  {
 	public static ComplexEvent copyOf(ComplexEvent ce) {
 		ComplexEvent newEvent = new ComplexEvent(ce.getEventClass());
 		newEvent.timestamp = ce.timestamp.deepCopy();
-		newEvent.constituents = ce.constituents;
-		newEvent.constitutingEventClasses = ce.constitutingEventClasses;
+		newEvent.constituents = new LinkedList<Event>(ce.constituents);
 		newEvent.permissibleWindow = (IntervalTimeStamp)ce.permissibleWindow.deepCopy();
-		newEvent.eventClassToEvents= new HashMap<String, PStack<Event>>(ce.eventClassToEvents);
+		newEvent.eventClassToEvents= new HashMap<String, List<Event>>();
+		for(String className : ce.eventClassToEvents.keySet()) {
+			List<Event> newlist= new LinkedList<Event>(ce.eventClassToEvents.get(className));
+			newEvent.eventClassToEvents.put(className,newlist);
+		}
 		newEvent.endsBy = ce.endsBy;
 		newEvent.consumed=ce.consumed;
 		return newEvent;
@@ -50,10 +47,9 @@ public class ComplexEvent extends Event  {
 	
 	public ComplexEvent(EventClass eventClass) {
 		this.eventClass = eventClass;
-		constituents = ConsPStack.empty();
-		constitutingEventClasses = HashTreePSet.empty();
+		constituents = new LinkedList<Event>();
 		atomicInt = new AtomicInteger();
-		eventClassToEvents= new HashMap<String, PStack<Event>>();
+		eventClassToEvents= new HashMap<String, List<Event>>();
 		consumed=false;
 	}
 	
@@ -69,15 +65,18 @@ public class ComplexEvent extends Event  {
 	
 	public int addEvent(Event e) {
 		if (e instanceof PrimaryEvent) {
-			constituents=constituents.plus(e);
+			constituents.add(e);
 			//if(!constitutingEventClasses.contains(e.getEventClass().getName()))
 			//	constitutingEventClasses = constitutingEventClasses.plus(e.getEventClass().getName());;
-			PStack<Event> list=eventClassToEvents.get(e.getEventClass().getName());
-			if(list==null)
-				list=ConsPStack.singleton(e);
+			List<Event> list=eventClassToEvents.get(e.getEventClass().getName());
+			if(list==null) {
+				list=new LinkedList<Event>();
+				list.add(e);
+				eventClassToEvents.put(e.getEventClass().getName(), list);
+			}
 			else
-				list=list.plus(e);
-			eventClassToEvents.put(e.getEventClass().getName(), list);
+				list.add(e);
+			
 			updateTimeStamp(e);
 		} else {
 			ComplexEvent ce = (ComplexEvent) e;
@@ -130,10 +129,10 @@ public class ComplexEvent extends Event  {
 			buffer.remove();
 		return ((Event)buffer.remove()).getAttributeValue(attrName); */
 		
-		PStack<Event> list=eventClassToEvents.get(eventClassName);
+		List<Event> list=eventClassToEvents.get(eventClassName);
 		if(list==null || list.size()-nthInstance < 0)
 			return null;
-		return list.get(list.size()-nthInstance).getAttributeValue(attrName);  
+		return list.get(nthInstance).getAttributeValue(attrName);  
 	}
 	
 	@Override
