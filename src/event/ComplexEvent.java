@@ -167,7 +167,7 @@ public class ComplexEvent extends Event  {
 	}
 	
 	public boolean containsEventOfClass(String className) {
-		return constitutingEventClasses.contains(className);
+		return eventClassToEvents.containsKey(className);
 	}
 	
 	@Override
