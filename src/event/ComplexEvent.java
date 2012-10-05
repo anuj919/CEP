@@ -132,7 +132,7 @@ public class ComplexEvent extends Event  {
 		List<Event> list=eventClassToEvents.get(eventClassName);
 		if(list==null || list.size()-nthInstance < 0)
 			return null;
-		return list.get(nthInstance).getAttributeValue(attrName);  
+		return list.get(nthInstance-1).getAttributeValue(attrName);  
 	}
 	
 	@Override
