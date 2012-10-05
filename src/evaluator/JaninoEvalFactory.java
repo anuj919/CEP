@@ -2,17 +2,15 @@ package evaluator;
 
 import java.io.StringReader;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.codehaus.janino.SimpleCompiler;
+
 import event.AttributeType;
 import event.eventtype.EventType;
-
-import org.codehaus.janino.SimpleCompiler;
 
 public class JaninoEvalFactory {
 
@@ -20,6 +18,15 @@ public class JaninoEvalFactory {
         Pattern.compile("([a-zA-Z][a-zA-Z0-9.]*)");
     
     static AtomicInteger instanceId = new AtomicInteger();
+    
+    final static Map<AttributeType,String> conversionMap;
+    
+    static {
+    	conversionMap = new HashMap<AttributeType, String>();
+    	conversionMap.put(AttributeType.Integer, "(int)");
+    	conversionMap.put(AttributeType.Double, "(double)");
+    	conversionMap.put(AttributeType.String, "");
+    }
 
     //private  SimpleCompiler compiler =
     //    new SimpleCompiler();
@@ -33,13 +40,14 @@ public class JaninoEvalFactory {
     	SimpleCompiler compiler = new SimpleCompiler();
         StringBuffer varCode = new StringBuffer();
         Matcher matcher = PATTERN.matcher(stringPredicate);
-        Set<String> names = new HashSet<String>();
+        Map<String,AttributeType> names = new HashMap<String,AttributeType>();
         boolean attrNotFound=false;
         while (matcher.find() && !attrNotFound) {
             String name = matcher.group(0);
-            if (names.contains(name))
-                continue;
+            
             String newname = name.replace('.', '_').replace(':', '_');
+            if (names.containsKey(newname))
+                continue;
             AttributeType attrType = null;
             try{
             	attrType=complextype.getAttributeType(name);
@@ -56,19 +64,24 @@ public class JaninoEvalFactory {
     		int nthInstance = ((eventClassAndInstance.length==2) ? Integer.parseInt(eventClassAndInstance[1]) : 1);
     		String attrName = eventClassAndAttr[1];
                         
-            if(attrType!=null)
-            	varCode.append(attrType.name()+" " + newname+ " = ("+attrType.name()+")vars.getAttributeValue(\"" + eventClassName+"\","+ nthInstance +",\"" + attrName + "\");");
+            if(attrType!=null) {
+            	varCode.append(attrType.name()+" " + newname+ " = ("+attrType.name()+")vars.getAttributeValue(\"" + eventClassName+"\","+ nthInstance +",\"" + attrName + "\");\n");
+            }
             else
             	attrNotFound=true;
-            names.add(name);
+            names.put(newname,attrType);
         }
         
         String code = null;
         if(attrNotFound)
         	code = "throw new NoSuchFieldException()";
-        else
-        	code = varCode + "\n" + "\t\treturn "+ stringPredicate.replace('.', '_'); 
-
+        else {
+        	String modifiedPredicate = stringPredicate.replace('.', '_');
+        	for(String varName:names.keySet()) {
+        		modifiedPredicate= modifiedPredicate.replace(varName, conversionMap.get(names.get(varName))+varName);
+        	}
+        	code = varCode + "\n" + "\t\treturn "+ modifiedPredicate; 
+        }
         String source = "package evaluator;\n"
          +"public class JaninoEvaluator"+unique_id+" implements evaluator.Evaluator {\n"
          +"\tpublic boolean evaluate(event.ComplexEvent vars) throws NoSuchFieldException {\n" 
