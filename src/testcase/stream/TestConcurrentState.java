@@ -9,6 +9,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.StringTokenizer;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 import state.ConcurrentState;
 import state.EndState;
@@ -106,11 +107,13 @@ public class TestConcurrentState {
 			Event e;
 			long t1=System.nanoTime();
 			try {
-				e = queue.take();
+				e = queue.poll(1,TimeUnit.SECONDS);
 			} catch (InterruptedException e1) {
 				e1.printStackTrace();
 				break;
 			}
+			if(e==null)
+				break;
 			
 			//e=kryo.readObject(input, PrimaryEvent.class);
 			long t2=System.nanoTime();

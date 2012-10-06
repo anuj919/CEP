@@ -7,6 +7,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.LinkedTransferQueue;
 
 import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.KryoException;
 import com.esotericsoftware.kryo.io.Input;
 
 import event.PrimaryEvent;
@@ -35,7 +36,12 @@ public class EventStreamReader implements Runnable {
 	public void run() {
 		for(;;) {
 			long t1=System.nanoTime();
-			ArrayList<PrimaryEvent> list=kryo.readObject(input, ArrayList.class);
+			ArrayList<PrimaryEvent> list=null;
+			try{
+				list=kryo.readObject(input, ArrayList.class);
+			} catch(KryoException ke) {
+				break;
+			}
 			long t2=System.nanoTime();
 			//System.err.println("Desrialization time= "+(t2-t1)/list.size());
 			for(int i=0;i<list.size();i++) {
