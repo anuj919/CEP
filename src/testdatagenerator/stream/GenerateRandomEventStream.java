@@ -145,7 +145,7 @@ public class GenerateRandomEventStream {
 		
 		try{
 		
-		for(;;) {
+//		for(;;) {
 			System.out.println("Waiting for connections...");
 			Socket clientSocket = socket.accept();
 			clientSocket.setTcpNoDelay(true);
@@ -216,7 +216,7 @@ public class GenerateRandomEventStream {
 				list.clear();
 			}
 			System.out.println("Generated "+i+" events in "+(System.nanoTime()-startTime)/1000000+"ms");
-		}
+//		}
 		
 		
 		
