@@ -1,25 +1,31 @@
-all: plots
+all: plots show
+
+show:
+	evince *.ps
 
 1: plots
 	mkdir OneState
 	./addTime.sh result.csv
 	mv *.ps OneState/.
 	mv *.csv OneState/.
-	evince OneState/*.ps
+	mv *.txt OneState/.
+#	evince OneState/*.ps
 
 2: plots
 	mkdir AutomatonWithReuse
 	./addTime.sh result.csv
 	mv *.ps AutomatonWithReuse/.
 	mv *.csv AutomatonWithReuse/.
-	evince AutomatonWithReuse/*.ps
+	mv *.txt AutomatonWithReuse/.
+#	evince AutomatonWithReuse/*.ps
 
 3: plots
 	mkdir AutomatonWithNoReuse
 	./addTime.sh result.csv
 	mv *.ps AutomatonWithNoReuse/.
 	mv *.csv AutomatonWithNoReuse/.
-	evince AutomatonWithNoReuse/*.ps
+	mv *.txt AutomatonWithNoReuse/.
+#	evince AutomatonWithNoReuse/*.ps
 
 plots: plot-memory.ps plot-cpu.ps
 
