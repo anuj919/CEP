@@ -38,13 +38,24 @@ implementation=${className[$3]}
 
 echo $inputEventRate $noOfEventsInjected >Results/sender.txt
 
+pkill java
+
 ./run.sh testdatagenerator.stream.GenerateRandomEventStream $inputEventRate $noOfEventsInjected  2>/dev/null >> Results/sender.txt &
 
-sleep 1
+sleep 3
+
+echo "Server started, starting client..."
 
 echo "$implementation \"${classes[$4]}\" \"$predicate\" $duration" >Results/client.txt
 
-./monitor.sh Results/result.csv $implementation "${classes[$4]}" "$predicate" $duration  2>>Results/client.txt >/dev/null
+./monitor.sh Results/result.csv $implementation "${classes[$4]}" "$predicate" $duration  2>>Results/client.txt > Results/client_log.txt
+
+echo "Client finished"
 
 cd Results
+processed=$(grep Processing client.txt | wc -l)
+echo "Processed = " $processed >stat.txt
+echo "Dropped = " $(( $noOfEventsInjected - $processed )) >>stat.txt
+averageTime=$(cat client.txt | grep Processing | awk '{print $6}' | awk 'BEGIN{count=0;n=0;} { count+=$0; n++; } END{ print count/n;}')
+echo "Average Time = $averageTime" >>stat.txt
 make $3

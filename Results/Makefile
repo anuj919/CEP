@@ -6,6 +6,7 @@ show:
 1: plots
 	mkdir OneState
 	./addTime.sh result.csv
+	./update_stat.sh ./stat.txt
 	mv *.ps OneState/.
 	mv *.csv OneState/.
 	mv *.txt OneState/.
@@ -14,6 +15,7 @@ show:
 2: plots
 	mkdir AutomatonWithReuse
 	./addTime.sh result.csv
+	./update_stat.sh ./stat.txt
 	mv *.ps AutomatonWithReuse/.
 	mv *.csv AutomatonWithReuse/.
 	mv *.txt AutomatonWithReuse/.
@@ -22,6 +24,7 @@ show:
 3: plots
 	mkdir AutomatonWithNoReuse
 	./addTime.sh result.csv
+	./update_stat.sh ./stat.txt
 	mv *.ps AutomatonWithNoReuse/.
 	mv *.csv AutomatonWithNoReuse/.
 	mv *.txt AutomatonWithNoReuse/.
