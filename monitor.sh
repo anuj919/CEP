@@ -12,7 +12,7 @@ fi
 
 port=9010
 ip=127.0.0.1
-max_memory=5g
+max_memory=$MAX_MEMORY
 interval=1
 
 outputfile=$1
