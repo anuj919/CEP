@@ -1,5 +1,13 @@
 #!/bin/bash
 
+# This script starts the event generator (which uses spec.txt in current directory) and runs the given
+# implementation for given conjunctive query.
+# It writes statistics in Results/sender.txt , Results/client_log.txt and Results/stat.txt
+# It also uses Makefile in Results directory to generate plots of memory and and CPU usage and calculate 
+# statistics like average processing time, # of events dropped etc., and put all data of the simulation 
+# into Results/OneState or Results/AutomatonWithReuse or Results/AutomatonWithNoReuse directory, 
+# depending on the implementation chosen
+
 if [[ $# != 6 ]]
 then
     echo "Usage: $0 inputEventRate noOfEvents impl# #ofEventClasses predicate duration"

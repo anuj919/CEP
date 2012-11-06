@@ -15,6 +15,11 @@ import javax.management.remote.JMXConnector;
 import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
 
+/*
+ * This class monitors and prints memory usage using MXBean interface
+ * It monitors CPU usage of given class using "ps" (Not portable)
+ */
+
 public class MonitorUsage
 {
 	private static MBeanServerConnection connection;
@@ -27,7 +32,6 @@ public static void Connection(String hostname, String port) throws IOException
 	JMXServiceURL address = new JMXServiceURL("service:jmx:rmi:///jndi/rmi://"+hostname+":"+port+"/jmxrmi");
 	connector = JMXConnectorFactory.connect(address,null);
 	connection = connector.getMBeanServerConnection();
-//	System.out.println("GOT THE MBeanServerConnection---SUCCESSFULLY");
 	}
 
 private static void getHeapMemoryUsage() throws Exception
@@ -82,7 +86,6 @@ public static void main(String[] args) throws Exception
 	System.out.println("#Time(HH:MM:SS) UsedMemory(MB) ComittedMemory(MB) CPU(%)");
 	try {
 	    for(;;) {
-		//doGarbageCollection();                // --&gt; use this method if you want to perform Garbage Collection
 		getHeapMemoryUsage();
 		getCPUUsage(name);
 		Thread.sleep(period * 1000);

@@ -1,4 +1,8 @@
 #!/bin/bash 
+
+# helper script to add all jar files from lib directory into classpath
+# and run given java class
+
 if [[ $# < 1 ]]
 then
     echo "Usage: $0 classToMonitor [args]"

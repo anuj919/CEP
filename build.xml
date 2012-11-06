@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- WARNING: Eclipse auto-generated file.
+              Any modifications will be overwritten.
+              To include a user specific buildfile here, simply create one in the same
+              directory with the processing instruction <?eclipse.ant.import?>
+              as the first entry and export the buildfile again. --><project basedir="." default="build" name="ConcurrentState">
+    <property environment="env"/>
+    <property name="debuglevel" value="source,lines,vars"/>
+    <property name="target" value="1.6"/>
+    <property name="source" value="1.6"/>
+    <path id="ConcurrentState.classpath">
+        <pathelement location="bin"/>
+        <pathelement location="../lib/janino.jar"/>
+        <pathelement location="../lib/commons-math3-3.0.jar"/>
+        <pathelement location="../lib/commons-compiler.jar"/>
+        <pathelement location="../lib/pcollections-2.1.2.jar"/>
+        <pathelement location="../lib/guava-13.0.jar"/>
+        <pathelement location="../lib/kryo-2.20-all.jar"/>
+        <pathelement location="../lib/numerics4j-1.3.jar"/>
+        <pathelement location="../lib/commons-collections-3.2.1.jar"/>
+    </path>
+    <target name="init">
+        <mkdir dir="bin"/>
+        <copy includeemptydirs="false" todir="bin">
+            <fileset dir="src">
+                <exclude name="**/*.launch"/>
+                <exclude name="**/*.java"/>
+            </fileset>
+        </copy>
+    </target>
+    <target name="clean">
+        <delete dir="bin"/>
+    </target>
+    <target depends="clean" name="cleanall"/>
+    <target depends="build-subprojects,build-project" name="build"/>
+    <target name="build-subprojects"/>
+    <target depends="init" name="build-project">
+        <echo message="${ant.project.name}: ${ant.file}"/>
+        <javac debug="true" debuglevel="${debuglevel}" destdir="bin" includeantruntime="false" source="${source}" target="${target}">
+            <src path="src"/>
+            <classpath refid="ConcurrentState.classpath"/>
+        </javac>
+    </target>
+    <target description="Build all projects which reference this project. Useful to propagate changes." name="build-refprojects"/>
+    <target name="TestConcurrentStateWithAutomaton">
+        <java classname="testcase.TestConcurrentStateWithAutomaton" failonerror="true" fork="yes">
+            <jvmarg line="-Xms64m -Xmx1g"/>
+            <arg line="events.txt 68 &quot;E1 E2  E3 E4 E5&quot; &quot;E1.a + E2.a&lt;5 &amp;&amp; E3.a == E4.a&quot; 70"/>
+            <classpath refid="ConcurrentState.classpath"/>
+        </java>
+    </target>
+    <target name="TestConcurrentStateWithAutomaton (1)">
+        <java classname="testcase.stream.TestConcurrentStateWithAutomaton" failonerror="true" fork="yes">
+            <jvmarg line="-Xms64m -Xmx1g"/>
+            <arg line="&quot;E1 E2  E3 E4 E5&quot; &quot;E1.a + E2.a&lt;5 &amp;&amp; E3.a == E4.a&quot; 70"/>
+            <classpath refid="ConcurrentState.classpath"/>
+        </java>
+    </target>
+    <target name="TestSequenceState">
+        <java classname="testcase.TestSequenceState" failonerror="true" fork="yes">
+            <classpath refid="ConcurrentState.classpath"/>
+        </java>
+    </target>
+    <target name="GenerateRandomEventStream">
+        <java classname="testdatagenerator.stream.GenerateRandomEventStream" failonerror="true" fork="yes">
+            <classpath refid="ConcurrentState.classpath"/>
+        </java>
+    </target>
+    <target name="TestJanino">
+        <java classname="evaluator.TestJanino" failonerror="true" fork="yes">
+            <classpath refid="ConcurrentState.classpath"/>
+        </java>
+    </target>
+    <target name="TestConcurrentStateStream">
+        <java classname="testcase.stream.TestConcurrentState" failonerror="true" fork="yes">
+            <jvmarg line="-Xms64m -Xmx1g"/>
+            <arg line="&quot;E1 E2  E3 E4 E5&quot; &quot;E1.a + E2.a&lt;5 &amp;&amp; E3.a == E4.a&quot; 70"/>
+            <classpath refid="ConcurrentState.classpath"/>
+        </java>
+    </target>
+    <target name="GenerateRandomEvent1">
+        <java classname="testdatagenerator.GenerateRandomEvent1" failonerror="true" fork="yes">
+            <classpath refid="ConcurrentState.classpath"/>
+        </java>
+    </target>
+    <target name="GetDistribution">
+        <java classname="testdatagenerator.GetDistribution" failonerror="true" fork="yes">
+            <classpath refid="ConcurrentState.classpath"/>
+        </java>
+    </target>
+    <target name="TestConcurrentState">
+        <java classname="testcase.TestConcurrentState" failonerror="true" fork="yes">
+            <jvmarg line="-Xms64m -Xmx1g"/>
+            <arg line="events.txt 68 &quot;E1 E2  E3 E4 E5&quot; &quot;E1.a + E2.a&lt;5 &amp;&amp; E3.a == E4.a&quot; 70"/>
+            <classpath refid="ConcurrentState.classpath"/>
+        </java>
+    </target>
+    <target name="TestConcurrentStateWithAutomatonNoReuse">
+        <java classname="testcase.TestConcurrentStateWithAutomatonNoReuse" failonerror="true" fork="yes">
+            <jvmarg line="-Xms64m -Xmx1g"/>
+            <arg line="events.txt 68 &quot;E1 E2  E3 E4 E5&quot; &quot;E1.a + E2.a&lt;5 &amp;&amp; E3.a == E4.a&quot; 70"/>
+            <classpath refid="ConcurrentState.classpath"/>
+        </java>
+    </target>
+    <target name="GenerateRandomEvents">
+        <java classname="testdatagenerator.GenerateRandomEvents" failonerror="true" fork="yes">
+            <arg line="event.txt"/>
+            <classpath refid="ConcurrentState.classpath"/>
+        </java>
+    </target>
+</project>
