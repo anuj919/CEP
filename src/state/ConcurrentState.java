@@ -21,9 +21,10 @@ import event.eventtype.ComplexEventType;
 import event.eventtype.EventType;
 import event.util.Policies;
 
+/* This class implements OneState approach for Conjunction Query.
+ */
+
 public class ConcurrentState implements State {
-	//Table<EventClass, EventClass, Multiset<Event> > table;
-	//Map<EventClass, PriorityQueue<ComplexEvent> > map;
 	Map<EventClass, List<ComplexEvent> > map;
 	EventClass outputEventClass;
 	long duration;
@@ -70,8 +71,6 @@ public class ConcurrentState implements State {
 		map=new HashMap<EventClass, List<ComplexEvent>>();
 		for(EventClass ec : classes ) {
 			List<ComplexEvent> queue = new LinkedList<ComplexEvent>();
-			//SortedTreeList<ComplexEvent> queue = new SortedTreeList<ComplexEvent>(timeBasedComparator);
-			//TreeMultiset<ComplexEvent> set = TreeMultiset.create(timeBasedComparator);
 			map.put(ec, queue);
 		}
 		
@@ -90,9 +89,6 @@ public class ConcurrentState implements State {
 		consumeHeartbit(e.getTimeStamp()); 	// Assuming events are submitted in total order
 		List<ComplexEvent> toNextStateList = new LinkedList<ComplexEvent>();
 		List<ComplexEvent> toBeAddedList = new LinkedList<ComplexEvent>();
-		//for(EventClass waitingFor : table.rowKeySet() ) {
-		//boolean b=map.containsKey(eClass);
-		//Multiset<ComplexEvent> set = map.get(eClass);
 		List<ComplexEvent> set = map.get(eClass);
 		if(set==null)
 			return ;

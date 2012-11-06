@@ -6,11 +6,12 @@ import java.util.concurrent.LinkedBlockingQueue;
 import org.apache.commons.math3.distribution.IntegerDistribution;
 
 import time.timestamp.IntervalTimeStamp;
-
-import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.kryo.io.Input;
-
 import event.PrimaryEvent;
+
+/*
+ * This class generates random events at a given rate and puts them
+ * on BlockingQueue. It is used to generate streams on events.
+ */
 
 public class EventGeneratorQueue implements Runnable {
 	BlockingQueue<PrimaryEvent> communicationLink;

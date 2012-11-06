@@ -10,6 +10,11 @@ import event.Event;
 import event.EventClass;
 import event.PrimaryEvent;
 
+/*
+ * This class implements union automaton state.
+ */
+
+
 public class UnionState implements State {
 	EventClass outputEventClass;
 	Evaluator evaluator;

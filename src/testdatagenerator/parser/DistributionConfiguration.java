@@ -14,6 +14,10 @@ import org.apache.commons.math3.distribution.UniformIntegerDistribution;
 import org.apache.commons.math3.distribution.UniformRealDistribution;
 import org.apache.commons.math3.distribution.ZipfDistribution;
 
+/* This class holds information regarding various probability
+ * distributions.
+ */
+
 public class DistributionConfiguration {
 	public Double params[];
 	public enum DistributionType {UniformInteger, UniformReal, Zipf, Exponential, Normal, Binomial, Poisson, Triangular, LogNormal, Beta, ChiSquare}; 

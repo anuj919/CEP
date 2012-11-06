@@ -7,6 +7,11 @@ import evaluator.Evaluator;
 import event.EventClass;
 import event.eventtype.ComplexEventType;
 
+/* 
+ * This class generates right deep tree of sequence automaton from given 
+ * event-classes. It also reuses already existing suffices.
+ */
+
 public class SequenceStateGenerator {
 	GlobalState globalState;
 	
@@ -15,6 +20,7 @@ public class SequenceStateGenerator {
 		this.globalState = GlobalState.getInstance();
 	}
 	
+	// Given two event-classes, generate binary sequence state
 	public State getBinarySequenceState(EventClass firstEventClass, EventClass secondEventClass, 
 			Evaluator evaluator, long timeWindowDuration) {
 		SequenceState firstState = null;
@@ -48,7 +54,7 @@ public class SequenceStateGenerator {
 	} 
 	
 		
-	
+	// given list of event-classes, generate right-deep sequence automaton
 	public State getSequenceState(List<EventClass> eventClasses, Evaluator evaluator, long timeWindowDuration) {
 		if(eventClasses.size()<=1)
 			return null;

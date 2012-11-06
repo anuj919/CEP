@@ -9,6 +9,11 @@ import evaluator.Evaluator;
 import event.EventClass;
 import event.eventtype.ComplexEventType;
 
+/* 
+ * This class generates right deep tree of sequence automaton from given 
+ * event-classes. It does NOT reuse already existing suffices.
+ */
+
 public class SequenceStateGeneratorWithoutReuse {
 	GlobalState globalState;
 	

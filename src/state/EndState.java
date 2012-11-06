@@ -8,6 +8,11 @@ import event.ComplexEvent;
 import event.Event;
 import event.EventClass;
 
+/*
+ * This is the accepting states of a query. It saves the generated events
+ * until some other entity pulls events from it
+ */
+
 public class EndState implements State{
 	List<Event> generatedEvents;
 	

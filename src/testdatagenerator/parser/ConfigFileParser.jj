@@ -23,24 +23,13 @@ public class ConfigFileParser {
     	return eventDefs();
     }
      
-       
-    /** public static void main(String args[])
-    {
-        try
-        {
-              BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-              UQLParser parser = new ConfigFileParser(reader);
-              RandomEventConfiguration randomEventConfig = parser.eventDef();
-              System.out.println(randomEventConfig);
-        }
-        catch(Exception e)
-        {
-        	//System.err.println(e.getMessage());
-			  e.printStackTrace();
-        }
-    } **/
 }
 PARSER_END(ConfigFileParser)
+
+/**
+	Each line in file represents configuration for event-class with following syntax.
+	<class-name> { [<attr-name>:<Datatype>:<Distribution>(<parameter-for-distribution>,..)   ,...]}
+**/
 
 /** Skip these characters, they are considered "white space" **/
 SKIP :                              

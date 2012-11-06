@@ -1,47 +1,45 @@
 package testdatagenerator.stream;
 
-import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.kryo.KryoException;
-import com.esotericsoftware.kryo.io.Input;
-import com.esotericsoftware.kryo.io.Output;
-import datastructures.SortedTreeList;
-import event.AttributeType;
-import event.Event;
-import event.EventClass;
-import event.PrimaryEvent;
-import event.eventtype.PrimaryEventType;
-import event.util.TypeMismatchException;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.StandardSocketOptions;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.commons.math3.distribution.BinomialDistribution;
 import org.apache.commons.math3.distribution.IntegerDistribution;
 import org.apache.commons.math3.distribution.PoissonDistribution;
 import org.apache.commons.math3.distribution.RealDistribution;
 import org.apache.commons.math3.distribution.UniformIntegerDistribution;
 
-import testdatagenerator.GenerateRandomEvents;
 import testdatagenerator.parser.ConfigFileParser;
 import testdatagenerator.parser.ParseException;
 import testdatagenerator.parser.RandomEventConfiguration;
 import time.timestamp.IntervalTimeStamp;
 import time.timestamp.TimeStamp;
+
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.KryoException;
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
+
+import datastructures.SortedTreeList;
+import event.AttributeType;
+import event.EventClass;
+import event.PrimaryEvent;
+import event.eventtype.PrimaryEventType;
+import event.util.TypeMismatchException;
+
+/*
+ * This class reads the configuration file, and generates event streams
+ * accordingly
+ */
 
 public class GenerateRandomEventStream {
 	EventClass eClass;
@@ -49,17 +47,14 @@ public class GenerateRandomEventStream {
 	Reader reader;
 	List<RandomEventConfiguration> eventConfigurations;
 	List<EventClass> eventClasses;
-	Map<String, AtomicInteger> counts;
 	
 	public GenerateRandomEventStream(String fileName) throws FileNotFoundException, ParseException {
 		//this.eventDistconfig = eventDistconfig;
 		reader = new BufferedReader(new FileReader(fileName));
 		eventConfigurations = new ConfigFileParser(reader).getEventConfig();
 		eventClasses = new LinkedList<EventClass>();
-		counts = new TreeMap<String, AtomicInteger>();
 		for(RandomEventConfiguration config: eventConfigurations) {
 			eventClasses.add(config.eClass);
-			counts.put(config.eClass.getName(), new AtomicInteger());
 		}
 	}
 	
@@ -107,7 +102,6 @@ public class GenerateRandomEventStream {
 		} catch(TypeMismatchException te) {
 			te.printStackTrace(); // can not happen
 		}
-		counts.get(pe.getEventClass().getName()).incrementAndGet();
 		return pe;
 	}
 	
@@ -123,7 +117,6 @@ public class GenerateRandomEventStream {
 			testcases=Integer.parseInt(args[1]);
 		}
 		long timePerEventInns=1000000000/rate;
-		int queueSize=10000;
 		
 		GenerateRandomEventStream generator = new GenerateRandomEventStream(inputFilePath);
 		
@@ -132,11 +125,7 @@ public class GenerateRandomEventStream {
 		//IntegerDistribution dist = new BinomialDistribution(generator.getNumEventClasses(), 0.2);
 		IntegerDistribution timeStampDist = new PoissonDistribution(1);
 		generator.setDistribution(dist);
-		
-		//EventGeneratorQueue eventGenerator=new EventGeneratorQueue(generator, timeStampDist, queueSize);
-		//BlockingQueue<PrimaryEvent> queue= eventGenerator.getOutputQueue();
-		//new Thread(eventGenerator).start();
-		
+				
 		int port=5555;
 		//StandardSocketOptions socketOpt= new StandardSocketOptions();
 		
@@ -145,6 +134,7 @@ public class GenerateRandomEventStream {
 		
 		try{
 		
+// accepting one connection only
 //		for(;;) {
 			System.out.println("Waiting for connections...");
 			Socket clientSocket = socket.accept();
@@ -217,31 +207,11 @@ public class GenerateRandomEventStream {
 			}
 			System.out.println("Generated "+i+" events in "+(System.nanoTime()-startTime)/1000000+"ms");
 //		}
-		
-		
-		
 		} catch(Exception e) {
 			e.printStackTrace();
 		} finally {
 			socket.close();
-		}
-		
-		
-		//System.out.println(generator.counts);
-		
-			
-	}
-
-	private static List<TimeStamp> getRandomTimeStamps(int howMany) {
-		int lower=0; int upper=howMany/2;
-		UniformIntegerDistribution dist = new UniformIntegerDistribution(lower,upper);
-		
-		List<TimeStamp> timeStampList = new SortedTreeList<TimeStamp>(IntervalTimeStamp.getComparator());
-		for(int i=0;i<howMany;i++) {
-			long t = dist.sample();
-			timeStampList.add(new IntervalTimeStamp(t,t));
-		}
-		return timeStampList;
+		}		
 	}
 	
 }

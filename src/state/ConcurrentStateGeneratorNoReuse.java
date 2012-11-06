@@ -12,12 +12,13 @@ import event.EventClass;
 import event.eventtype.ComplexEventType;
 import event.eventtype.EventType;
 
+/* This class generates set of states to implement conjunctive query
+ * using ConcurrentStateWithNoReuse approach.
+ */
+
 public class ConcurrentStateGeneratorNoReuse {
 	GlobalState globalState;	
-	
 	SequenceStateGeneratorWithoutReuse seqGenerator;
-	
-	
 	
 	public ConcurrentStateGeneratorNoReuse() {
 		globalState = GlobalState.getInstance();
@@ -46,7 +47,6 @@ public class ConcurrentStateGeneratorNoReuse {
 			EventType resultType = new ComplexEventType(eventClasses);
 			EventClass resultClass = new EventClass(strRep,resultType);
 			combinePermuatationState = new UnionState(resultClass);
-			//combinePermuatationState.setPredicate(predicate);
 			globalState.registerOuputEventClassToState(resultClass, combinePermuatationState);
 
 		
@@ -59,7 +59,6 @@ public class ConcurrentStateGeneratorNoReuse {
 				}
 			}
 		}
-		//joinPaths(lastState);
 		
 		return combinePermuatationState;
 	}

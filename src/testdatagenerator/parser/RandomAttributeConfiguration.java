@@ -4,6 +4,11 @@ import java.util.Arrays;
 
 import event.AttributeType;
 
+/*
+ * This class holds information of random variable such as: name,
+ * type, and probability distribution
+ */
+
 public class RandomAttributeConfiguration {
 	public String attrName;
 	public AttributeType attrType;

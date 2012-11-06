@@ -340,19 +340,4 @@ public class ConfigFileParser implements ConfigFileParserConstants {
   static final public void disable_tracing() {
   }
 
-    /** public static void main(String args[])
-    {
-        try
-        {
-              BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-              UQLParser parser = new ConfigFileParser(reader);
-              RandomEventConfiguration randomEventConfig = parser.eventDef();
-              System.out.println(randomEventConfig);
-        }
-        catch(Exception e)
-        {
-        	//System.err.println(e.getMessage());
-			  e.printStackTrace();
-        }
-    } **/
 }

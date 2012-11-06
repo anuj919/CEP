@@ -22,7 +22,9 @@ public class SequenceState implements State {
 	EventClass outputEventClass;
 	long duration;
 	List<State> nextStates;
-	boolean firstState;
+	boolean firstState; // true signifies that this state if first, so
+						// no partial matches will be extended, all incoming
+						// events should be propagated
 	
 	// we cache event in same time epoch, in order to avoid ordering related problems
 	List<Event> cachedEvents;
@@ -33,7 +35,7 @@ public class SequenceState implements State {
 	Evaluator evaluator;
 	Comparator<ComplexEvent> timeBasedComparator ;
 	TimeStamp lastHearbitTimeStamp;
-	private static AtomicInteger instanceCount = new AtomicInteger();
+	private static AtomicInteger instanceCount = new AtomicInteger(); // to create unique name for automaton state
 	private String identifier;
 	private TimeModel tm;
 	private boolean publishResult;
@@ -188,8 +190,6 @@ public class SequenceState implements State {
 				if(constraintSatisfied && !extendedPartialMatch.isConsumed()) {
 					extendedPartialMatch.setEventClass(outputEventClass);
 					toNextStateList.add(extendedPartialMatch);
-					//extendedPartialMatch.setConsumed(true);
-					//itr.remove();
 				}
 			}
 		}

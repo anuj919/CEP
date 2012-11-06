@@ -12,14 +12,18 @@ import event.EventClass;
 import event.eventtype.ComplexEventType;
 import event.eventtype.EventType;
 
-public class ConcurrentStateGenerator {
+/* This class generates set of states to implement conjunctive query
+ * using ConcurrentStateWithReuse approach.
+ */
+
+public class ConcurrentStateGeneratorWithReuse {
 	GlobalState globalState;	
 	
 	SequenceStateGenerator seqGenerator;
 	
 	
 	
-	public ConcurrentStateGenerator() {
+	public ConcurrentStateGeneratorWithReuse() {
 		globalState = GlobalState.getInstance();
 		this.seqGenerator=new SequenceStateGenerator();
 	}

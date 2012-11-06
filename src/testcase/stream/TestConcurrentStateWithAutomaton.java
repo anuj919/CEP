@@ -11,7 +11,7 @@ import java.util.StringTokenizer;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-import state.ConcurrentStateGenerator;
+import state.ConcurrentStateGeneratorWithReuse;
 import state.EndState;
 import state.GlobalState;
 import state.State;
@@ -85,7 +85,7 @@ public class TestConcurrentStateWithAutomaton {
 		while(tokenizer.hasMoreTokens())
 			seqList.add(globalState.getEventClass(tokenizer.nextToken()));
 		
-		ConcurrentStateGenerator concGenerator = new ConcurrentStateGenerator();
+		ConcurrentStateGeneratorWithReuse concGenerator = new ConcurrentStateGeneratorWithReuse();
 		State lastState = concGenerator.generateConcurrentState(seqList, predicate, timeDuration);
 		
 		EndState endState = new EndState();

@@ -10,6 +10,14 @@ import time.timestamp.TimeStamp;
 import event.Event;
 import event.EventClass;
 
+/*
+ * This class keeps the meta-data regarding, which event-classes need to be 
+ * delivered to which states, which states generates events of which event-class
+ * list of all automaton states, list of all know event-classes
+ * 
+ * This class uses singlton pattern
+ */
+
 public class GlobalState {
 	Map<String, EventClass> knownEventClasses;
 	Map<String, List<State>> inputEventToStates;
