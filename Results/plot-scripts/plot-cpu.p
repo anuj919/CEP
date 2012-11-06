@@ -8,4 +8,4 @@ set timefmt "%H:%M:%S"
 set format x "%H:%M"
 set yrange [0:600]
 
-plot 'result.csv' using 1:4 title 'CPU Utilized' with lp 
+plot '../result.csv' using 1:4 title 'CPU Utilized' with lp 
