@@ -92,7 +92,7 @@ public class TestConcurrentState {
 		Integer rate=kryo.readObject(input, Integer.class);
 		System.out.println("Received Rate="+rate);
 		
-		int queueSize=3000;
+		int queueSize=Math.min(3000, 2*rate);
 		EventStreamReader eventReader=new EventStreamReader(kryo, input, queueSize,rate);
 		BlockingQueue<PrimaryEvent> queue=eventReader.getInputQueue();
 		new Thread(eventReader).start();
