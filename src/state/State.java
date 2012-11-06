@@ -1,7 +1,6 @@
 package state;
 
 import java.util.Collection;
-import java.util.List;
 
 import event.ComplexEvent;
 import event.Event;

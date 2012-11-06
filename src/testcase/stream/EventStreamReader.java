@@ -3,14 +3,17 @@ package testcase.stream;
 import java.util.ArrayList;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.LinkedTransferQueue;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.KryoException;
 import com.esotericsoftware.kryo.io.Input;
 
 import event.PrimaryEvent;
+
+/* This class runs separate thread for receiving the incoming events
+ * Incoming events are batched. So they are again put in the queue
+ * at pre-negotiated rate 
+ */
 
 public class EventStreamReader implements Runnable {
 	Kryo kryo;
@@ -22,7 +25,7 @@ public class EventStreamReader implements Runnable {
 	EventStreamReader(Kryo kryo, Input input, int queueSize, int rate) {
 		this.kryo = kryo;
 		this.input = input;
-		this.communicationLink = new ArrayBlockingQueue(queueSize, true);
+		this.communicationLink = new ArrayBlockingQueue<PrimaryEvent>(queueSize, true);
 		this.rate = rate;
 		this.receivedCount=0;
 		this.droppedCount=0;
@@ -35,14 +38,14 @@ public class EventStreamReader implements Runnable {
 	@Override
 	public void run() {
 		for(;;) {
-			long t1=System.nanoTime();
+			//long t1=System.nanoTime();
 			ArrayList<PrimaryEvent> list=null;
 			try{
 				list=kryo.readObject(input, ArrayList.class);
 			} catch(KryoException ke) {
 				break;
 			}
-			long t2=System.nanoTime();
+			//long t2=System.nanoTime();
 			//System.err.println("Desrialization time= "+(t2-t1)/list.size());
 			for(int i=0;i<list.size();i++) {
 				long start=System.nanoTime();

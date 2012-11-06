@@ -26,6 +26,11 @@ import event.EventClass;
 import event.PrimaryEvent;
 import event.eventtype.PrimaryEventType;
 
+/* This class reads events from 127.0.0.1:5555 and executes the given conjunction query
+ * The rate and event classes are also sent by event generator.
+ * This class uses OneState approach
+ */
+
 public class TestConcurrentState {
 
 	@SuppressWarnings("unchecked")
@@ -94,7 +99,6 @@ public class TestConcurrentState {
 		
 		List<Event> generatedEveList = new LinkedList<Event>();
 		long generatedEvents=0;
-		long prev=0;
 
 		kryo.writeObject(output, "GoAhead");
 		output.flush();

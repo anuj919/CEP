@@ -1,8 +1,5 @@
 package event.eventtype;
 
-import java.util.Map;
-import java.util.Set;
-
 import event.AttributeType;
 
 abstract public class EventType {

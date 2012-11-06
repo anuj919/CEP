@@ -1,16 +1,13 @@
 package state;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
 import evaluator.Evaluator;
-import evaluator.JaninoEvalFactory;
 import event.EventClass;
 import event.eventtype.ComplexEventType;
-import event.eventtype.EventType;
 
 public class SequenceStateGeneratorWithoutReuse {
 	GlobalState globalState;

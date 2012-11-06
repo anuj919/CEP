@@ -11,8 +11,6 @@ import java.util.StringTokenizer;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-import state.ConcurrentState;
-import state.ConcurrentStateGenerator;
 import state.ConcurrentStateGeneratorNoReuse;
 import state.EndState;
 import state.GlobalState;
@@ -31,6 +29,13 @@ import event.EventClass;
 import event.PrimaryEvent;
 import event.eventtype.ComplexEventType;
 import event.eventtype.PrimaryEventType;
+
+/* This class reads events from 127.0.0.1:5555 and executes the given conjunction query
+ * The rate and event classes are also sent by event generator.
+ * This class uses AutomatonWithNoReuse approach
+ * Output of this class, should be redirected to Results/result.csv, where make 3 will
+ * process it 
+ */
 
 public class TestConcurrentStateWithAutomatonNoReuse {
 
@@ -103,7 +108,6 @@ public class TestConcurrentStateWithAutomatonNoReuse {
 		
 		List<Event> generatedEveList = new LinkedList<Event>();
 		long generatedEvents=0;
-		long prev=0;
 
 		kryo.writeObject(output, "GoAhead");
 		output.flush();

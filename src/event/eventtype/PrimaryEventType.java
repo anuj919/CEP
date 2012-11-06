@@ -1,17 +1,11 @@
 package event.eventtype;
 
-import java.io.IOException;
 import java.io.Serializable;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
 import event.AttributeType;
-import event.PrimaryEvent;
-import event.util.Serializer;
 
 @SuppressWarnings("serial")
 public class PrimaryEventType extends EventType implements Serializable {

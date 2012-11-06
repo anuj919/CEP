@@ -4,11 +4,9 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 
 import time.timestamp.IntervalTimeStamp;
 import time.timestamp.TimeStamp;
-
 import event.Event;
 import event.EventClass;
 

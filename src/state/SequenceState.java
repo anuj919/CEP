@@ -99,7 +99,6 @@ public class SequenceState implements State {
 
 	@Override
 	public void submitNext(Event e) {
-		EventClass eClass = e.getEventClass();
 		consumeHeartbit(e.getTimeStamp());		// Assuming events are submitted in total order
 		List<ComplexEvent> toNextStateList = new LinkedList<ComplexEvent>();
 		cachedEvents.add(e);

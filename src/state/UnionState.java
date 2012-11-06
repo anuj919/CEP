@@ -1,11 +1,8 @@
 package state;
 
 import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import evaluator.AlwaysTrueEvaluator;
 import evaluator.Evaluator;
 import evaluator.JaninoEvalFactory;
 import event.ComplexEvent;
@@ -77,8 +74,7 @@ public class UnionState implements State {
 	}
 
 	@Override
-	public void propogatePartialMatches(
-			Collection<ComplexEvent> newPartialMatches) {
+	public void propogatePartialMatches(Collection<ComplexEvent> newPartialMatches) {
 		for(ComplexEvent ce : newPartialMatches)
 			submitNext(ce);
 	}

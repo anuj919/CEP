@@ -1,4 +1,4 @@
-package testcase;
+package testcase.batch;
 
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
@@ -9,44 +9,37 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.StringTokenizer;
 
-import org.apache.commons.math3.distribution.BinomialDistribution;
-import org.apache.commons.math3.distribution.IntegerDistribution;
-import org.apache.commons.math3.distribution.PoissonDistribution;
-
-import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.kryo.io.Input;
-
-import state.ConcurrentStateGenerator;
+import state.ConcurrentStateGeneratorNoReuse;
 import state.EndState;
 import state.GlobalState;
 import state.State;
-import testdatagenerator.GenerateRandomEvents;
 import testdatagenerator.parser.ParseException;
 import time.timestamp.IntervalTimeStamp;
 import time.timestamp.TimeStamp;
 
-//import com.esotericsoftware.kryo.Kryo;
-//import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.Input;
 
+import evaluator.Evaluator;
+import evaluator.JaninoEvalFactory;
 import event.Event;
 import event.EventClass;
 import event.PrimaryEvent;
+import event.eventtype.ComplexEventType;
 import event.eventtype.PrimaryEventType;
+//import com.esotericsoftware.kryo.Kryo;
+//import com.esotericsoftware.kryo.io.Input;
 
-public class TestConcurrentStateWithAutomaton {		
-	/**
-	 * @param args
-	 * @throws FileNotFoundException
-	 * @throws ParseException
-	 */
+public class TestConcurrentStateWithAutomatonNoReuse {		
 	@SuppressWarnings("unchecked")
 	public static void main(String[] args) throws FileNotFoundException, ParseException {
 		long start=System.nanoTime();
 		int repeat=1;
-		//String specFilePath = "spec.txt";
-		//GenerateRandomEvents generator = new GenerateRandomEvents(specFilePath);
-		//IntegerDistribution dist = new BinomialDistribution(generator.getNumEventClasses()-1,0.2);
-		//generator.setDistribution(dist);
+		
+		if(args.length!=4) {
+			System.err.println("Usage: java -cp <> TestConcurrentStateWithAutomatonNoReuse specification-file-path #testcases #eventclasses predicate duration-for-window");
+			System.exit(1);
+		}
 		
 		String inputFilePath = args[0];
 		int testcases = Integer.parseInt(args[1]);
@@ -70,8 +63,6 @@ public class TestConcurrentStateWithAutomaton {
 			return;
 		}
 		
-		
-		//List<EventClass> classes = generator.getEventClasses();
 		GlobalState globalState = GlobalState.getInstance();
 		
 		for(EventClass ec : classes)
@@ -82,22 +73,10 @@ public class TestConcurrentStateWithAutomaton {
 		StringTokenizer tokenizer = new StringTokenizer(eventClasses, " ");
 		while(tokenizer.hasMoreTokens())
 			seqList.add(globalState.getEventClass(tokenizer.nextToken()));
-		
-//		seqList.add(globalState.getEventClass("E1"));
-//		seqList.add(globalState.getEventClass("E2"));
-//		seqList.add(globalState.getEventClass("E3"));
-//		seqList.add(globalState.getEventClass("E4"));
-//      seqList.add(globalState.getEventClass("E5"));
-//      seqList.add(globalState.getEventClass("E6"));
-//      seqList.add(globalState.getEventClass("E7"));
-//      seqList.add(globalState.getEventClass("E8"));
-//      seqList.add(globalState.getEventClass("E9"));
-
-		//String predicate = "E1.a + E2.a < 5 && E3.a == E4.a";
-		//String predicate = "E3.a + E4.a < 10 ";
-		//long timeDuration = 70l;
-		ConcurrentStateGenerator concGenerator = new ConcurrentStateGenerator();
-		State lastState = concGenerator.generateConcurrentState(seqList, predicate, timeDuration);
+				
+		Evaluator evaluator = JaninoEvalFactory.fromString(new ComplexEventType(seqList), predicate);
+		ConcurrentStateGeneratorNoReuse concGenerator = new ConcurrentStateGeneratorNoReuse();
+		State lastState = concGenerator.generateConcurrentState(seqList, evaluator, timeDuration);
 		
 		EndState endState = new EndState();
 		globalState.registerInputEventClassToState(lastState.getOutputEventClass(), endState);
@@ -133,7 +112,7 @@ public class TestConcurrentStateWithAutomaton {
 				endState.getGeneratedEvents(generatedEveList);
 				generatedEvents+=generatedEveList.size();
 				if(generatedEvents-prev>1000) {
-					System.out.println("****"+generatedEvents+" events generated****");
+					System.out.println("****"+generatedEvents+" events generated**** ["+(System.nanoTime()-start)/1000000.0+"]");
 					prev=generatedEvents;
 				}
 				//if(generatedEveList.size()>0)
@@ -142,6 +121,6 @@ public class TestConcurrentStateWithAutomaton {
 			}
 		}
 		System.out.println((System.nanoTime()-start)/1000000.0/repeat);
-		System.out.println("****"+generatedEvents+" events generated****");	
+		System.out.println("****"+generatedEvents+" events generated****");
 	}
 }

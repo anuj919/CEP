@@ -1,4 +1,4 @@
-package testcase;
+package testcase.batch;
 
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
@@ -28,10 +28,11 @@ public class TestConcurrentState {
 	public static void main(String[] args) throws FileNotFoundException, ParseException {
 		long start=System.nanoTime();
 		int repeat=1;
-		//String specFilePath = "spec.txt";
-		//GenerateRandomEvents generator = new GenerateRandomEvents(specFilePath);
-		//IntegerDistribution dist = new BinomialDistribution(generator.getNumEventClasses()-1,0.2);
-		//generator.setDistribution(dist);
+		
+		if(args.length!=4) {
+			System.err.println("Usage: java -cp <> TestConcurrentState specification-file-path #testcases #eventclasses predicate duration-for-window");
+			System.exit(1);
+		}
 		
 		String inputFilePath = args[0];
 		int testcases = Integer.parseInt(args[1]);
@@ -55,8 +56,6 @@ public class TestConcurrentState {
 			return;
 		}
 		
-		
-		//List<EventClass> classes = generator.getEventClasses();
 		GlobalState globalState = GlobalState.getInstance();
 		
 		for(EventClass ec : classes)
@@ -68,22 +67,8 @@ public class TestConcurrentState {
 		while(tokenizer.hasMoreTokens())
 			seqList.add(globalState.getEventClass(tokenizer.nextToken()));
 		
-//		seqList.add(globalState.getEventClass("E1"));
-//		seqList.add(globalState.getEventClass("E2"));
-//		seqList.add(globalState.getEventClass("E3"));
-//		seqList.add(globalState.getEventClass("E4"));
-//      seqList.add(globalState.getEventClass("E5"));
-//      seqList.add(globalState.getEventClass("E6"));
-//      seqList.add(globalState.getEventClass("E7"));
-//      seqList.add(globalState.getEventClass("E8"));
-//      seqList.add(globalState.getEventClass("E9"));
-		
-		//String predicate = "E1.a + E2.a < 5 && E3.a == E4.a";
-		//String predicate = "E3.a + E4.a < 10 ";
-		//long timeDuration = 70l;
 		ConcurrentState concState = new ConcurrentState(timeDuration,predicate,seqList);
-		
-		
+				
 		EndState endState = new EndState();
 		globalState.registerInputEventClassToState(concState.getOutputEventClass(), endState);
 		System.out.println("Done setting up the automaton..");
@@ -93,8 +78,6 @@ public class TestConcurrentState {
 		List<PrimaryEvent> currentBatch = new LinkedList<PrimaryEvent>();
 		long generatedEvents=0;
 		long prev=0,i=0;
-		
-		
 		
 		for(int j=0;j<repeat;j++)
 		while(i<testcases) {
@@ -123,26 +106,6 @@ public class TestConcurrentState {
 			}
 		}
 		
-		/*for(int j=0;j<repeat;j++)
-			for(int i=0;i<testcases;i++) {
-				if(i%(testcases/100) == 0)
-					System.out.println(i+" events injected");
-				Event e = generator.generateEvent();
-				time+=timeStampDist.sample();
-				e.setTimeStamp(new IntervalTimeStamp(time,time));
-				//System.out.println(e);
-				globalState.submitNext(e);
-				endState.getGeneratedEvents(generatedEveList);
-				generatedEvents+=generatedEveList.size();
-				if(generatedEvents-prev>1000) {
-					System.out.println("****"+generatedEvents+" events generated****");
-					prev=generatedEvents;
-				}
-				//if(generatedEveList.size()>0)
-				//	System.out.println("*******"+generatedEveList+"*******");
-				generatedEveList.clear();
-			}
-			*/
 		System.out.println((System.nanoTime()-start)/1000000.0/repeat + "ms");
 		System.out.println("****"+generatedEvents+" events generated****");
 			
