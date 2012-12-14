@@ -66,4 +66,11 @@ echo "Processed = " $processed >stat.txt
 echo "Dropped = " $(( $noOfEventsInjected - $processed )) >>stat.txt
 averageTime=$(cat client.txt | grep Processing | awk '{print $6}' | awk 'BEGIN{count=0;n=0;} { count+=$0; n++; } END{ print count/n;}')
 echo "Average Time = $averageTime" >>stat.txt
+echo -n "Average Time (90th percentile) = " >> stat.txt
+
+# get 90th percentile of average time
+cat client.txt | grep Processing | tail -n +2 | awk '{print $6}' | sort -n >.procTimes.txt
+head -n $(( $(cat .procTimes.txt | wc -l) * 9 / 10 )) .procTimes.txt | awk 'BEGIN{count=0;n=0;}{count=count+$1; n++;}END{printf "%d\n", count/n;}' >> stat.txt
+rm .procTimes.txt
+
 make $3

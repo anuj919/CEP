@@ -19,7 +19,7 @@ outputfile=$1
 shift
 
 
-java -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port=$port  -Dcom.sun.management.jmxremote.authenticate=false -Djava.rmi.server.hostname=$ip -Dcom.sun.management.jmxremote.ssl=false -cp bin:$(echo ../lib/*.jar | tr ' ' ':') -Xms64m -Xmx$max_memory "$@" &
+java -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port=$port  -Dcom.sun.management.jmxremote.authenticate=false -Djava.rmi.server.hostname=$ip -Dcom.sun.management.jmxremote.ssl=false -cp bin:$(echo ../lib/*.jar | tr ' ' ':') -Xms64m -Xmx$max_memory -Xloggc:Results/gc_log.txt -XX:+PrintGCDetails "$@" &
 
 sleep 1
 
