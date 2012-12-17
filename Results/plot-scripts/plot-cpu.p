@@ -6,6 +6,6 @@ set xlabel "Time"
 set xdata time
 set timefmt "%H:%M:%S"
 set format x "%H:%M"
-set yrange [0:600]
+set yrange [0:800]
 
 plot 'result.csv' using 1:4 title 'CPU Utilized' with lp 

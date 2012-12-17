@@ -3,7 +3,7 @@ set term postscript enhanced color
 
 set ylabel "Memory Usage (MB)"
 set xlabel "Time Elapsed (s)"
-#set yrange [0:1024*4.5]
+set yrange [0:1024*7.5]
 
 set output 'plot-compare-memory.ps'
 plot "OneState/result.csv" using 5:2 title 'OneState' with lp,\
