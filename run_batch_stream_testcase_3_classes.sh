@@ -197,6 +197,6 @@ do_work
 
 
 mkdir Results/3classes
-mv testcase* 3classes/.
+mv Results/testcase* Results/3classes/.
 
 

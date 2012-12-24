@@ -179,4 +179,4 @@ do_work
 
 
 mkdir Results/5classes
-mv testcase* 5classes/.
+mv Results/testcase* Results/5classes/.
