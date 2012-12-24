@@ -85,9 +85,9 @@ END{print total_usage/count}')
        automatonWithReuse_proc_time=$(tail -1 $testcasedir/AutomatonWithReuse/stat.txt | awk '{print $NF}')
        automatonWithNoReuse_proc_time=$(tail -1 $testcasedir/AutomatonWithNoReuse/stat.txt | awk '{print $NF}')
 
-       echo $line_prefix"OneState "$onestate_avg_memory" "$onestate_avg_cpu" "$onestate_drop_perc" "$onestate_proc_time >> results.txt
-       echo $line_prefix"AutomatonWithReuse "$automatonWithReuse_avg_memory" "$automatonWithReuse_avg_cpu" "$automatonWithReuse_drop_perc" "$automatonWithReuse_proc_time >> results.txt
-       echo $line_prefix"AutomatonWithNoReuse "$automatonWithNoReuse_avg_memory" "$automatonWithNoReuse_avg_cpu" "$automatonWithNoReuse_drop_perc" "$automatonWithNoReuse_proc_time >> results.txt
+       echo $line_prefix"OneState "$numClasses" "$onestate_avg_memory" "$onestate_avg_cpu" "$onestate_drop_perc" "$onestate_proc_time >> results.txt
+       echo $line_prefix"AutomatonWithReuse "$numClasses" "$automatonWithReuse_avg_memory" "$automatonWithReuse_avg_cpu" "$automatonWithReuse_drop_perc" "$automatonWithReuse_proc_time >> results.txt
+       echo $line_prefix"AutomatonWithNoReuse "$numClasses" "$automatonWithNoReuse_avg_memory" "$automatonWithNoReuse_avg_cpu" "$automatonWithNoReuse_drop_perc" "$automatonWithNoReuse_proc_time >> results.txt
     done 2>/dev/null
     popd >/dev/null
 done
