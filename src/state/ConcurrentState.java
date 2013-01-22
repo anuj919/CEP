@@ -104,6 +104,7 @@ public class ConcurrentState implements State {
 				continue;
 			} 
 			
+			long t1=System.nanoTime();
 			ComplexEvent extendedPartialMatch = ComplexEvent.copyOf(partialMatch);
 			int numSubEvents = extendedPartialMatch.addEvent(e);
 			boolean constraintSatisfied = false;
@@ -137,6 +138,8 @@ public class ConcurrentState implements State {
 				if(moreAttribNeeded || constraintSatisfied ) 
 					toBeAddedList.add(extendedPartialMatch);
 			}
+			long t2=System.nanoTime();
+			System.err.println("Evaluating = "+(t2-t1)+" ns");
 		}	
 		
 		// this new event will also start new partial match
@@ -146,6 +149,7 @@ public class ConcurrentState implements State {
 		newMatch.setPermissibleTimeWindowTill(endts);
 		toBeAddedList.add(newMatch);
 		
+		long t1=System.nanoTime();
 		for(ComplexEvent ce : toBeAddedList) {
 			for(EventClass waitingFor : map.keySet() ) {
 				if(!ce.containsEventOfClass(waitingFor.getName())) // ce already contains this
@@ -155,6 +159,8 @@ public class ConcurrentState implements State {
 		
 		for(Event generatedEvent:toNextStateList)
 			GlobalState.getInstance().submitNext(generatedEvent);
+		long t2=System.nanoTime();
+		System.err.println("Propagting time = "+(t2-t1)+" ns");
 	}
 	
 	// This is just a wrapper around sendHeartbit(long) for TimeStamp
