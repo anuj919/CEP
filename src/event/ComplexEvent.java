@@ -4,6 +4,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.pcollections.ConsPStack;
@@ -209,5 +210,7 @@ public class ComplexEvent extends Event  {
 		};
 	}
 	
-	
+	public Set<String> getEventClassesAlreadyPresent(){
+		return eventClassToEvents.keySet(); 
+	}
 }

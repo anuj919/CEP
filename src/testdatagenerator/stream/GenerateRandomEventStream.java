@@ -108,7 +108,7 @@ public class GenerateRandomEventStream {
 	public static void main(String[] args) throws ParseException, UnknownHostException, IOException {
 		String inputFilePath = "spec.txt";
 		if(args.length<1 || args.length>2) {
-			System.err.println("Arguments: <event-rate>");
+			System.err.println("Arguments: <event-rate> [no-of-events]");
 			System.exit(1);
 		}
 		int rate=Integer.parseInt(args[0]);

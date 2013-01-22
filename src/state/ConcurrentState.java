@@ -3,11 +3,15 @@ package state;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import time.timemodel.TimeModel;
 import time.timestamp.IntervalTimeStamp;
@@ -18,7 +22,6 @@ import event.ComplexEvent;
 import event.Event;
 import event.EventClass;
 import event.eventtype.ComplexEventType;
-import event.eventtype.EventType;
 import event.util.Policies;
 
 /* This class implements OneState approach for Conjunction Query.
@@ -29,7 +32,7 @@ public class ConcurrentState implements State {
 	EventClass outputEventClass;
 	long duration;
 	int numClasses;
-	Evaluator evaluator;
+	Map<Set<String>,Evaluator> evaluators;
 	String identifier;
 	Comparator<ComplexEvent> timeBasedComparator ;
 	TimeModel tm;
@@ -63,10 +66,36 @@ public class ConcurrentState implements State {
 		}
 		String classRepr = strbldr.toString();
 		//create eventClass for complex events which will be generated
-		EventType complexType = new ComplexEventType(classes);
+		ComplexEventType complexType = new ComplexEventType(classes);
 		outputEventClass = new EventClass(classRepr, complexType);
 		
-		this.evaluator = JaninoEvalFactory.fromString(complexType, predicate);
+		
+		
+		/*String[] slicedPredicates = predicate.split("&&");		
+		Map<Set<String>,Set<String>> eventClassesToPredicate = new HashMap<Set<String>, Set<String>>();
+		// build a map for each event-class and corresponding predicates
+		for(String pred : slicedPredicates) {
+			Set<String> eventClasses = getEventClassesInPredicate(pred);
+			Set<String> correspondingPredicates = eventClassesToPredicate.get(eventClasses);
+			if(correspondingPredicates==null) {
+				correspondingPredicates=new HashSet<String>();
+				eventClassesToPredicate.put(eventClasses, correspondingPredicates);
+			}
+			correspondingPredicates.add(pred);
+		}
+		
+		for(Set<String> ec : eventClassesToPredicate.keySet()) {
+			StringBuilder conjunctionPred = new StringBuilder();
+			for(String pred : eventClassesToPredicate.get(ec)) {
+				conjunctionPred.append(" && ");
+				conjunctionPred.append(pred);
+			}
+			// remove the first &&
+			conjunctionPred.substring(0, " && ".length());
+			evaluators.put(ec, JaninoEvalFactory.fromString(complexType, conjunctionPred.toString()));
+		} */
+		this.setPredicate(predicate);
+			
 		
 		map=new HashMap<EventClass, List<ComplexEvent>>();
 		for(EventClass ec : classes ) {
@@ -109,10 +138,14 @@ public class ConcurrentState implements State {
 			boolean constraintSatisfied = false;
 			boolean moreAttribNeeded = false;
 			try {
-				constraintSatisfied = evaluator.evaluate(extendedPartialMatch);
-			} catch(NullPointerException ex) {
-				//ignore: signifies that not enough values are present to evaluate predicate to be true
-				moreAttribNeeded = true;
+				Evaluator evaluator = evaluators.get(extendedPartialMatch.getEventClassesAlreadyPresent());
+				if(evaluator == null)
+					constraintSatisfied=true;
+				else
+					constraintSatisfied = evaluator.evaluate(extendedPartialMatch);
+			//} catch(NullPointerException ex) {
+			//	//ignore: signifies that not enough values are present to evaluate predicate to be true
+			//	moreAttribNeeded = true;
 			} catch(NoSuchFieldException nsfe) {
 				throw new RuntimeException("Something wrong with predicate, possibly attribute names");
 			}
@@ -177,7 +210,32 @@ public class ConcurrentState implements State {
 
 	@Override
 	public void setPredicate(String predicate) {
-		this.evaluator = JaninoEvalFactory.fromString(outputEventClass.getEventType(), predicate);
+		this.evaluators = new HashMap<Set<String>, Evaluator>();
+		String[] slicedPredicates = predicate.split("&&");		
+		Map<Set<String>,Set<String>> eventClassesToPredicate = new HashMap<Set<String>, Set<String>>();
+		// build a map for each event-class and corresponding predicates
+		for(String pred : slicedPredicates) {
+			Set<String> eventClasses = getEventClassesInPredicate(pred);
+			Set<String> correspondingPredicates = eventClassesToPredicate.get(eventClasses);
+			if(correspondingPredicates==null) {
+				correspondingPredicates=new HashSet<String>();
+				eventClassesToPredicate.put(eventClasses, correspondingPredicates);
+			}
+			correspondingPredicates.add(pred);
+		}
+		
+		for(Set<String> ec : eventClassesToPredicate.keySet()) {
+			StringBuilder conjunctionPred = new StringBuilder();
+			for(String pred : eventClassesToPredicate.get(ec)) {
+				conjunctionPred.append(" && ");
+				conjunctionPred.append(pred);
+			}
+			// remove the first &&
+			conjunctionPred.delete(0, " && ".length());
+			Evaluator evaluator = JaninoEvalFactory.fromString(outputEventClass.getEventType(), conjunctionPred.toString()); 
+			evaluators.put(ec, evaluator);
+		}
+		//this.evaluator = JaninoEvalFactory.fromString(outputEventClass.getEventType(), predicate);
 	}
 
 	@Override
@@ -190,6 +248,18 @@ public class ConcurrentState implements State {
 	@Override
 	public void pumpHeartbeat(long heartbeat) {
 		// it already does it
+	}
+	
+	private Set<String> getEventClassesInPredicate(String predicate) {
+		Set<String> returnSet = new HashSet<String>();
+		Pattern pattern = Pattern.compile("[a-zA-Z][a-zA-Z0-9.]*", Pattern.DOTALL);
+		Matcher matcher = pattern.matcher(predicate);
+		while(matcher.find()){
+		    String eClassWithAttr = matcher.group(); // this will include the $
+		    String eClass = eClassWithAttr.split("\\.")[0];
+		    returnSet.add(eClass);
+		}
+		return returnSet;
 	}
 
 }
