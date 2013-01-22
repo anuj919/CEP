@@ -138,14 +138,16 @@ public class ConcurrentState implements State {
 			boolean constraintSatisfied = false;
 			boolean moreAttribNeeded = false;
 			try {
-				Evaluator evaluator = evaluators.get(extendedPartialMatch.getEventClassesAlreadyPresent());
+				long t1 = System.nanoTime();
+				Set<String> eventClassesAlreadyPresent = extendedPartialMatch.getEventClassesAlreadyPresent();
+				long t2 = System.nanoTime();
+				Evaluator evaluator = evaluators.get(eventClassesAlreadyPresent);
+				long t3 = System.nanoTime();
+				System.out.println("MarchingPredicate = "+(t2-t1)+"ns Evaluating = "+(t3-t2)+" ns");
 				if(evaluator == null)
 					constraintSatisfied=true;
 				else
 					constraintSatisfied = evaluator.evaluate(extendedPartialMatch);
-			//} catch(NullPointerException ex) {
-			//	//ignore: signifies that not enough values are present to evaluate predicate to be true
-			//	moreAttribNeeded = true;
 			} catch(NoSuchFieldException nsfe) {
 				throw new RuntimeException("Something wrong with predicate, possibly attribute names");
 			}
