@@ -96,7 +96,7 @@ public class GlobalState {
 	}
 
 	public void submitHeartbeat(TimeStamp timeStamp) {
-		long heartbeat=0;
+		double heartbeat=0;
 		if(timeStamp instanceof IntervalTimeStamp)
 			heartbeat=((IntervalTimeStamp)timeStamp).getEndTime();
 		else

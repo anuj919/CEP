@@ -49,7 +49,7 @@ public class EndState implements State{
 	}
 
 	@Override
-	public void pumpHeartbeat(long heartbeat) {
+	public void pumpHeartbeat(double heartbeat) {
 	}
 
 }

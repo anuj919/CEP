@@ -15,4 +15,7 @@ import event.EventClass;
 public class RandomEventConfiguration {
 	public EventClass eClass;
 	public Map<String, RandomAttributeConfiguration> map;
+	public double time;
+	public double relativeRate;
+	public double actualRate;
 }

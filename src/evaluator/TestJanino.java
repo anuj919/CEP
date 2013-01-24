@@ -94,10 +94,10 @@ public class TestJanino {
 		PrimaryEvent e2 = new PrimaryEvent(ec2);
 		PrimaryEvent e3 = new PrimaryEvent(ec3);
 		PrimaryEvent e4 = new PrimaryEvent(ec4);
-		e1.setTimeStamp(new IntervalTimeStamp(0l, 0l));
-		e2.setTimeStamp(new IntervalTimeStamp(0l, 0l));
-		e3.setTimeStamp(new IntervalTimeStamp(0l, 0l));
-		e4.setTimeStamp(new IntervalTimeStamp(0l, 0l));
+		e1.setTimeStamp(new IntervalTimeStamp(0.0, 0.0));
+		e2.setTimeStamp(new IntervalTimeStamp(0.0, 0.0));
+		e3.setTimeStamp(new IntervalTimeStamp(0.0, 0.0));
+		e4.setTimeStamp(new IntervalTimeStamp(0.0, 0.0));
 		try {
 			//e1.addAttributeValue("a1", 10);
 			e1.addAttributeValue("a", 2.693634799645854);
@@ -114,7 +114,7 @@ public class TestJanino {
 		ce.addEvent(e2);
 		ce.addEvent(e3);
 		ce.addEvent(e4);
-		ce.setTimeStamp(new IntervalTimeStamp(0l, 0l));
+		ce.setTimeStamp(new IntervalTimeStamp(0.0, 0.0));
 		try {
 			System.out.println(ce.getAttributeValue("E1.a"));
 			System.out.println(ce.getAttributeValue("E2",1,"a"));

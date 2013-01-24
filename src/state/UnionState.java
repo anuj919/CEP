@@ -85,7 +85,7 @@ public class UnionState implements State {
 	}
 
 	@Override
-	public void pumpHeartbeat(long heartbeat) {
+	public void pumpHeartbeat(double heartbeat) {
 	}
 
 }

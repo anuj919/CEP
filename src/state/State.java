@@ -15,5 +15,5 @@ public interface State {
 	public EventClass getOutputEventClass();
 	public void setPredicate(String predicate);
 	public void propogatePartialMatches(Collection<ComplexEvent> newPartialMatches);
-	public void pumpHeartbeat(long heartbeat);
+	public void pumpHeartbeat(double heartbeat);
 }

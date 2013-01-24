@@ -9,9 +9,11 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.PriorityQueue;
 
 import org.apache.commons.math3.distribution.IntegerDistribution;
 import org.apache.commons.math3.distribution.PoissonDistribution;
@@ -42,19 +44,40 @@ import event.util.TypeMismatchException;
  */
 
 public class GenerateRandomEventStream {
-	EventClass eClass;
-	IntegerDistribution eventDistconfig;
 	Reader reader;
 	List<RandomEventConfiguration> eventConfigurations;
 	List<EventClass> eventClasses;
+	PriorityQueue<RandomEventConfiguration> heap;
 	
-	public GenerateRandomEventStream(String fileName) throws FileNotFoundException, ParseException {
+	public GenerateRandomEventStream(String fileName,int rate) throws FileNotFoundException, ParseException {
 		//this.eventDistconfig = eventDistconfig;
+		double relativeTotalRate=0;
 		reader = new BufferedReader(new FileReader(fileName));
 		eventConfigurations = new ConfigFileParser(reader).getEventConfig();
 		eventClasses = new LinkedList<EventClass>();
 		for(RandomEventConfiguration config: eventConfigurations) {
 			eventClasses.add(config.eClass);
+			relativeTotalRate+=config.relativeRate;
+		}
+		for(RandomEventConfiguration config: eventConfigurations) {
+			config.actualRate=config.relativeRate * rate / relativeTotalRate;
+		}
+		
+		// populate heap
+		heap = new PriorityQueue<RandomEventConfiguration>(eventConfigurations.size(), new Comparator<RandomEventConfiguration>() {
+			@Override
+			public int compare(RandomEventConfiguration o1,
+					RandomEventConfiguration o2) {
+				if(o1.time < o2.time)
+					return -1;
+				else if(o1.time == o2.time)
+					return 0;
+				else
+					return 1;
+			}
+		});
+		for(RandomEventConfiguration config: eventConfigurations) {
+			heap.add(config);
 		}
 	}
 	
@@ -62,21 +85,26 @@ public class GenerateRandomEventStream {
 		return eventConfigurations.size();
 	}
 	
-	public void setDistribution(IntegerDistribution dist) {
-		this.eventDistconfig = dist;
-	}
-	
 	public List<EventClass> getEventClasses() {
 		return eventClasses;
 	}
 	
 	public PrimaryEvent generateEvent() {
-		int random = eventDistconfig.sample();
-		RandomEventConfiguration selected = eventConfigurations.get(random % eventConfigurations.size()); 
+		RandomEventConfiguration selectedConfig = heap.poll();
+		PrimaryEvent event = generateEvent(selectedConfig);
+		heap.offer(selectedConfig);
+		return event;
+	}
+	
+	private PrimaryEvent generateEvent(RandomEventConfiguration selected) { 
 		EventClass eClass = selected.eClass; 
 		PrimaryEventType et = (PrimaryEventType) eClass.getEventType();
 		
 		PrimaryEvent pe = new PrimaryEvent(eClass);
+		//self.time+= - log(self.r.rvs())/self.rate
+		double timestampDiff = - Math.log(Math.random())/selected.actualRate;
+		selected.time+=timestampDiff;
+		pe.setTimeStamp(new IntervalTimeStamp(selected.time, selected.time));
 		
 		try {
 			for(String attName : et.getAttributeNames()) {
@@ -118,24 +146,14 @@ public class GenerateRandomEventStream {
 		}
 		long timePerEventInns=1000000000/rate;
 		
-		GenerateRandomEventStream generator = new GenerateRandomEventStream(inputFilePath);
-		
-		// Distribution for selecting eventclasses
-		IntegerDistribution dist = new UniformIntegerDistribution(0,generator.getNumEventClasses()-1);
-		//IntegerDistribution dist = new BinomialDistribution(generator.getNumEventClasses(), 0.2);
-		IntegerDistribution timeStampDist = new PoissonDistribution(1);
-		generator.setDistribution(dist);
+		GenerateRandomEventStream generator = new GenerateRandomEventStream(inputFilePath,rate);
 				
-		int port=5555;
-		//StandardSocketOptions socketOpt= new StandardSocketOptions();
-		
+		int port=5555;		
 		ServerSocket socket = new ServerSocket(port);
 		
-		
 		try{
-		
-// accepting one connection only
-//		for(;;) {
+		// accepting one connection only
+		//for(;;) {
 			System.out.println("Waiting for connections...");
 			Socket clientSocket = socket.accept();
 			clientSocket.setTcpNoDelay(true);
@@ -172,9 +190,6 @@ public class GenerateRandomEventStream {
 				
 				for(int j=0;j<BATCH_SIZE && i<testcases;j++,i++) {
 					PrimaryEvent e=generator.generateEvent();
-					time+=timeStampDist.sample();
-					time++;
-					e.setTimeStamp(new IntervalTimeStamp(time,time));
 					list.add(e);
 				}
 				//System.out.println("Time to take event from queue:"+(System.nanoTime()-startEvent));

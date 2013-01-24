@@ -56,7 +56,7 @@ public class IntervalTimeModel extends TimeModel {
 	}
 
 	@Override
-	public TimeStamp getPointBasedTimeStamp(long time) {
+	public TimeStamp getPointBasedTimeStamp(double time) {
 		return new IntervalTimeStamp(time,time);
 	}
 }

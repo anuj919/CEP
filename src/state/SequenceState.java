@@ -92,7 +92,7 @@ public class SequenceState implements State {
 			assert false;
 	}
 
-	private void consumeHeartbit(long time) {
+	private void consumeHeartbit(double time) {
 		TimeStamp newHeartbit = tm.getPointBasedTimeStamp(time);
 		if(newHeartbit.compareTo(lastHearbitTimeStamp)!=0)
 			cachedEvents.clear();
@@ -225,7 +225,7 @@ public class SequenceState implements State {
 	}
 
 	@Override
-	public void pumpHeartbeat(long heartbeat) {
+	public void pumpHeartbeat(double heartbeat) {
 		consumeHeartbit(heartbeat);
 		for(Iterator<ComplexEvent> itr=partialMatches.iterator(); itr.hasNext();) {
 			ComplexEvent partialMatch = itr.next();

@@ -73,7 +73,7 @@ List<RandomEventConfiguration> eventDefs() :
 
 RandomEventConfiguration eventDef() :
 {
-	EventClass ec; RandomAttributeConfiguration attrConfig; Token t; String className;
+	EventClass ec; RandomAttributeConfiguration attrConfig; Token t,rateToken=null; String className;
 	PrimaryEventType eType = new PrimaryEventType();
 	ArrayList<RandomAttributeConfiguration> attrConfigList = new ArrayList<RandomAttributeConfiguration>();
 	Map<String,RandomAttributeConfiguration> map = new HashMap<String,RandomAttributeConfiguration>();
@@ -98,11 +98,19 @@ RandomEventConfiguration eventDef() :
         	)*
         )?
         <RBRACE>
+        [
+        rateToken= <DOUBLE_VAL>
+        ] 
         {
         	ec = new EventClass(className, eType);
         	RandomEventConfiguration eventConfig = new RandomEventConfiguration();
         	eventConfig.eClass = ec;
         	eventConfig.map = map;
+        	eventConfig.time = 0;
+        	if(rateToken==null)
+        		eventConfig.relativeRate=1.0;
+        	else
+        		eventConfig.relativeRate=Double.parseDouble(rateToken.image);
         	return eventConfig;
         }
 }

@@ -4,8 +4,8 @@ import java.util.Comparator;
 
 
 public class IntervalTimeStamp implements time.timestamp.TimeStamp {
-	Long start;
-	Long end;
+	Double start;
+	Double end;
 	
 	private static Comparator<TimeStamp> cachedComparator = new Comparator<TimeStamp >() {
 		@Override
@@ -35,18 +35,18 @@ public class IntervalTimeStamp implements time.timestamp.TimeStamp {
 	
 	private IntervalTimeStamp() {}
 	
-	public IntervalTimeStamp(Long start, Long end) {
+	public IntervalTimeStamp(Double start, Double end) {
 		if(start.compareTo(end) > 0)
 			new RuntimeException();
 		this.start = start;
 		this.end = end;
 	}
 	
-	public Long getStartTime() {
+	public Double getStartTime() {
 		return start;
 	}
 	
-	public Long getEndTime() {
+	public Double getEndTime() {
 		return end;
 	}
 	

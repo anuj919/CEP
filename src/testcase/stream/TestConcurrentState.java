@@ -135,6 +135,7 @@ public class TestConcurrentState {
 			//if(generatedEveList.size()>0)
 			//	System.out.println("*******"+generatedEveList+"*******");
 			generatedEveList.clear();
-		}	
+		}
+		System.exit(0);
 	}
 }

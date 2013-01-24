@@ -1,13 +1,22 @@
 package state;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import time.timemodel.TimeModel;
 import time.timestamp.IntervalTimeStamp;
@@ -21,15 +30,21 @@ import event.eventtype.ComplexEventType;
 import event.eventtype.EventType;
 import event.util.Policies;
 
+import datastructures.MultiQueue;
 /* This class implements OneState approach for Conjunction Query.
  */
 
 public class ConcurrentState implements State {
-	Map<EventClass, List<ComplexEvent> > map;
+	
+	static int NUM_PROC = Runtime.getRuntime().availableProcessors();
+	static ExecutorService threadpool = Executors.newFixedThreadPool(NUM_PROC);
+	
+	Map<EventClass, MultiQueue<ComplexEvent> > map;
 	EventClass outputEventClass;
 	long duration;
 	int numClasses;
-	Evaluator evaluator;
+	//Evaluator evaluator;
+	Map<Set<String>,Evaluator> evaluators;
 	String identifier;
 	Comparator<ComplexEvent> timeBasedComparator ;
 	TimeModel tm;
@@ -66,12 +81,13 @@ public class ConcurrentState implements State {
 		EventType complexType = new ComplexEventType(classes);
 		outputEventClass = new EventClass(classRepr, complexType);
 		
-		this.evaluator = JaninoEvalFactory.fromString(complexType, predicate);
+		//this.evaluator = JaninoEvalFactory.fromString(complexType, predicate);
+		this.setPredicate(predicate);
 		
-		map=new HashMap<EventClass, List<ComplexEvent>>();
+		map=new HashMap<EventClass, MultiQueue<ComplexEvent>>();
 		for(EventClass ec : classes ) {
-			List<ComplexEvent> queue = new LinkedList<ComplexEvent>();
-			map.put(ec, queue);
+			MultiQueue<ComplexEvent> multiQueue = new MultiQueue<ComplexEvent>(NUM_PROC);
+			map.put(ec, multiQueue);
 		}
 		
 		for(EventClass ec: classes) {
@@ -84,63 +100,79 @@ public class ConcurrentState implements State {
 		return outputEventClass;
 	}
 	
-	public void submitNext(Event e) {
+	public void submitNext(final Event e) {
 		EventClass eClass = e.getEventClass();
 		consumeHeartbit(e.getTimeStamp()); 	// Assuming events are submitted in total order
-		List<ComplexEvent> toNextStateList = new LinkedList<ComplexEvent>();
-		List<ComplexEvent> toBeAddedList = new LinkedList<ComplexEvent>();
-		List<ComplexEvent> set = map.get(eClass);
-		if(set==null)
+		final Collection<ComplexEvent> toNextStateList = new ConcurrentLinkedQueue<ComplexEvent>();
+		final Collection<ComplexEvent> toBeAddedList = new ConcurrentLinkedQueue<ComplexEvent>();
+		MultiQueue<ComplexEvent> multiQueue = map.get(eClass);
+		if(multiQueue==null)
 			return ;
 		
+		final Collection<Callable<Object>> tasks = new ArrayList<Callable<Object>>();
+		
 		//generate new partial matches
-		for(Iterator<ComplexEvent> itr=set.iterator(); itr.hasNext();) {
-			ComplexEvent partialMatch = itr.next();
-			
-			//check if the partial match is expired?
-			int result = tm.getTimeStampComparator().compare(lastHearbitTimeStamp, partialMatch.getPermissibleTimeWindowTill());
-			if(result>0) { //expired
-				itr.remove();
-				continue;
-			} 
-			
-			long t1=System.nanoTime();
-			ComplexEvent extendedPartialMatch = ComplexEvent.copyOf(partialMatch);
-			int numSubEvents = extendedPartialMatch.addEvent(e);
-			boolean constraintSatisfied = false;
-			boolean moreAttribNeeded = false;
-			try {
-				constraintSatisfied = evaluator.evaluate(extendedPartialMatch);
-			} catch(NullPointerException ex) {
-				//ignore: signifies that not enough values are present to evaluate predicate to be true
-				moreAttribNeeded = true;
-			} catch(NoSuchFieldException nsfe) {
-				throw new RuntimeException("Something wrong with predicate, possibly attribute names");
-			}
-			if(numSubEvents == numClasses) {
-				if(constraintSatisfied && !extendedPartialMatch.isConsumed()) {
-					// Generate all combinations for Complex Events like, E2;E4 and E4;E2 if E2 and E4 have same timestamp
+		for(int i=0;i<multiQueue.getNumInternalQueue();i++) {
+			final List<ComplexEvent> list = multiQueue.getList(i);
+			tasks.add(Executors.callable( new Runnable() {
+				@Override
+				public void run() {
+					for(Iterator<ComplexEvent> itr=list.iterator(); itr.hasNext();) {
+						ComplexEvent partialMatch = itr.next();
+						
+						//check if the partial match is expired?
+						int result = tm.getTimeStampComparator().compare(lastHearbitTimeStamp, partialMatch.getPermissibleTimeWindowTill());
+						if(result>0) { //expired
+							itr.remove();
+							continue;
+						} 
+						
+						ComplexEvent extendedPartialMatch = ComplexEvent.copyOf(partialMatch);
+						int numSubEvents = extendedPartialMatch.addEvent(e);
+						boolean constraintSatisfied = false;
+						boolean moreAttribNeeded = false;
+						try {
+							//constraintSatisfied = evaluator.evaluate(extendedPartialMatch);
+							Set<String> eventClassesAlreadyPresent = extendedPartialMatch.getEventClassesAlreadyPresent();
+							Evaluator evaluator = evaluators.get(eventClassesAlreadyPresent);
+							if(evaluator == null)
+								constraintSatisfied=true;
+							else
+								constraintSatisfied = evaluator.evaluate(extendedPartialMatch);
+						//} catch(NullPointerException ex) {
+						//	//ignore: signifies that not enough values are present to evaluate predicate to be true
+						//	moreAttribNeeded = true;
+						} catch(NoSuchFieldException nsfe) {
+							throw new RuntimeException("Something wrong with predicate, possibly attribute names");
+						}
+						if(numSubEvents == numClasses) {
+							if(constraintSatisfied && !extendedPartialMatch.isConsumed()) {
+								extendedPartialMatch.setEventClass(outputEventClass);
+								toNextStateList.add(extendedPartialMatch);
+								//extendedPartialMatch.setConsumed(true);
+								//itr.remove();
+							}
+						} else {
+							/* 
+							 * if(!moreAttribNeeded && !constraintSatisfied)
+							 * 	discard the newEvent
+							 * else
+							 * 	add it to other queues
+							 */
+							if(moreAttribNeeded || constraintSatisfied ) 
+								toBeAddedList.add(extendedPartialMatch);
+						}
+					}	
 					
-					extendedPartialMatch.setEventClass(outputEventClass);
-					toNextStateList.add(extendedPartialMatch);
-					
-					//extendedPartialMatch.setConsumed(true);
-					//itr.remove();
 				}
-				//itr.remove();
-			} else {
-				/* 
-				 * if(!moreAttribNeeded && !constraintSatisfied)
-				 * 	discard the newEvent
-				 * else
-				 * 	add it to other queues
-				 */
-				if(moreAttribNeeded || constraintSatisfied ) 
-					toBeAddedList.add(extendedPartialMatch);
-			}
-			long t2=System.nanoTime();
-			System.err.println("Evaluating = "+(t2-t1)+" ns");
-		}	
+			} ));	
+		}
+		
+		try {
+	        threadpool.invokeAll(tasks);
+	    } catch (InterruptedException ex) {
+	    	ex.printStackTrace();
+	    }
 		
 		// this new event will also start new partial match
 		ComplexEvent newMatch = new ComplexEvent(outputEventClass);
@@ -173,7 +205,7 @@ public class ConcurrentState implements State {
 			assert false;
 	}
 	
-	private void consumeHeartbit(long time) {
+	private void consumeHeartbit(double time) {
 		TimeStamp newHeartbit = tm.getPointBasedTimeStamp(time);
 		if(newHeartbit.compareTo(lastHearbitTimeStamp)!=0)
 			cachedEvents.clear();
@@ -183,7 +215,32 @@ public class ConcurrentState implements State {
 
 	@Override
 	public void setPredicate(String predicate) {
-		this.evaluator = JaninoEvalFactory.fromString(outputEventClass.getEventType(), predicate);
+		//this.evaluator = JaninoEvalFactory.fromString(outputEventClass.getEventType(), predicate);
+		this.evaluators = new HashMap<Set<String>, Evaluator>();
+		String[] slicedPredicates = predicate.split("&&");		
+		Map<Set<String>,Set<String>> eventClassesToPredicate = new HashMap<Set<String>, Set<String>>();
+		// build a map for each event-class and corresponding predicates
+		for(String pred : slicedPredicates) {
+			Set<String> eventClasses = getEventClassesInPredicate(pred);
+			Set<String> correspondingPredicates = eventClassesToPredicate.get(eventClasses);
+			if(correspondingPredicates==null) {
+				correspondingPredicates=new HashSet<String>();
+				eventClassesToPredicate.put(eventClasses, correspondingPredicates);
+			}
+			correspondingPredicates.add(pred);
+		}
+		
+		for(Set<String> ec : eventClassesToPredicate.keySet()) {
+			StringBuilder conjunctionPred = new StringBuilder();
+			for(String pred : eventClassesToPredicate.get(ec)) {
+				conjunctionPred.append(" && ");
+				conjunctionPred.append(pred);
+			}
+			// remove the first &&
+			conjunctionPred.delete(0, " && ".length());
+			Evaluator evaluator = JaninoEvalFactory.fromString(outputEventClass.getEventType(), conjunctionPred.toString()); 
+			evaluators.put(ec, evaluator);
+		}
 	}
 
 	@Override
@@ -194,8 +251,20 @@ public class ConcurrentState implements State {
 	}
 
 	@Override
-	public void pumpHeartbeat(long heartbeat) {
+	public void pumpHeartbeat(double heartbeat) {
 		// it already does it
+	}
+	
+	private Set<String> getEventClassesInPredicate(String predicate) {
+		Set<String> returnSet = new HashSet<String>();
+		Pattern pattern = Pattern.compile("[a-zA-Z][a-zA-Z0-9.]*", Pattern.DOTALL);
+		Matcher matcher = pattern.matcher(predicate);
+		while(matcher.find()){
+		    String eClassWithAttr = matcher.group(); // this will include the $
+		    String eClass = eClassWithAttr.split("\\.")[0];
+		    returnSet.add(eClass);
+		}
+		return returnSet;
 	}
 
 }
