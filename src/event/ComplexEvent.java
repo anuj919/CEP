@@ -96,7 +96,9 @@ public class ComplexEvent extends Event  {
 		if(timestamp == null)
 			timestamp = e.getTimeStamp();
 		else {
-			IntervalTimeModel.getInstance().combineInPlace(timestamp, e.getTimeStamp());
+			timestamp.setStartTime(Math.min(timestamp.getStartTime(),e.getTimeStamp().getStartTime()));
+			timestamp.setEndTime(Math.max(timestamp.getEndTime(),e.getTimeStamp().getEndTime()));
+			//IntervalTimeModel.getInstance().combineInPlace(timestamp, e.getTimeStamp());
 		}
 	}
 	

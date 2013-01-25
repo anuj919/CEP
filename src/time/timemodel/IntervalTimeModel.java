@@ -21,8 +21,8 @@ public class IntervalTimeModel {
 	}
 	
 	public void  combineInPlace(IntervalTimeStamp ts1, IntervalTimeStamp ts2) {
-		double start = ts1.getStartTime().compareTo(ts2.getStartTime()) <0 ? ts1.getStartTime() : ts2.getStartTime(); //min
-		double end = ts1.getEndTime().compareTo(ts2.getEndTime()) <0 ? ts2.getEndTime() : ts1.getEndTime(); //max 
+		double start = Math.min(ts1.getStartTime(), ts2.getStartTime()); //min
+		double end = Math.max(ts1.getEndTime(),ts2.getEndTime());//max 
 		ts1.setStartTime(start);
 		ts1.setEndTime(end);
 	}
