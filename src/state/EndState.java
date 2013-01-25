@@ -3,6 +3,8 @@ package state;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import event.ComplexEvent;
 import event.Event;
@@ -26,7 +28,7 @@ public class EndState implements State{
 	}
 
 	@Override
-	public void submitNext(Event e) {
+	public synchronized void submitNext(Event e) {
 		generatedEvents.add(e);
 	}
 	

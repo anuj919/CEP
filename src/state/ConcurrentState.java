@@ -97,7 +97,7 @@ public class ConcurrentState implements State {
 		return outputEventClass;
 	}
 	
-	public void submitNext(final Event e) {
+	public synchronized void submitNext(final Event e) {
 		EventClass eClass = e.getEventClass();
 		consumeHeartbit(e.getTimeStamp().getEndTime()); 	// Assuming events are submitted in total order
 		//final Collection<ComplexEvent> toNextStateList = new ConcurrentLinkedQueue<ComplexEvent>();

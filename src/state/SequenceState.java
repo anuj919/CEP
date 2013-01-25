@@ -88,7 +88,7 @@ public class SequenceState implements State {
 	}
 
 	@Override
-	public void submitNext(Event e) {
+	public synchronized void submitNext(Event e) {
 		consumeHeartbit(e.getTimeStamp().getEndTime());		// Assuming events are submitted in total order
 		List<ComplexEvent> toNextStateList = new LinkedList<ComplexEvent>();
 		cachedEvents.add(e);
