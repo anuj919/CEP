@@ -9,6 +9,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -103,8 +104,8 @@ public class ConcurrentState implements State {
 	public void submitNext(final Event e) {
 		EventClass eClass = e.getEventClass();
 		consumeHeartbit(e.getTimeStamp()); 	// Assuming events are submitted in total order
-		final Collection<ComplexEvent> toNextStateList = new ConcurrentLinkedQueue<ComplexEvent>();
-		final Collection<ComplexEvent> toBeAddedList = new ConcurrentLinkedQueue<ComplexEvent>();
+		//final Collection<ComplexEvent> toNextStateList = new ConcurrentLinkedQueue<ComplexEvent>();
+		//final Collection<ComplexEvent> toBeAddedList = new ConcurrentLinkedQueue<ComplexEvent>();
 		MultiQueue<ComplexEvent> multiQueue = map.get(eClass);
 		if(multiQueue==null)
 			return ;
@@ -113,7 +114,7 @@ public class ConcurrentState implements State {
 		
 		//generate new partial matches
 		for(int i=0;i<multiQueue.getNumInternalQueue();i++) {
-			final List<ComplexEvent> list = multiQueue.getList(i);
+			final Queue<ComplexEvent> list = multiQueue.getList(i);
 			tasks.add(Executors.callable( new Runnable() {
 				@Override
 				public void run() {
@@ -148,7 +149,8 @@ public class ConcurrentState implements State {
 						if(numSubEvents == numClasses) {
 							if(constraintSatisfied && !extendedPartialMatch.isConsumed()) {
 								extendedPartialMatch.setEventClass(outputEventClass);
-								toNextStateList.add(extendedPartialMatch);
+								//toNextStateList.add(extendedPartialMatch);
+								GlobalState.getInstance().submitNext(extendedPartialMatch);
 								//extendedPartialMatch.setConsumed(true);
 								//itr.remove();
 							}
@@ -159,8 +161,14 @@ public class ConcurrentState implements State {
 							 * else
 							 * 	add it to other queues
 							 */
-							if(moreAttribNeeded || constraintSatisfied ) 
-								toBeAddedList.add(extendedPartialMatch);
+							if(moreAttribNeeded || constraintSatisfied ) {
+								// toBeAddedList.add(extendedPartialMatch);
+								for(EventClass waitingFor : map.keySet() ) {
+									if(!extendedPartialMatch.containsEventOfClass(waitingFor.getName())) // ce already contains this
+										map.get(waitingFor).add(extendedPartialMatch);
+								}
+							}
+								
 						}
 					}	
 					
@@ -179,18 +187,16 @@ public class ConcurrentState implements State {
 		newMatch.addEvent(e);
 		TimeStamp endts=Policies.getInstance().getTimeModel().getWindowCompletionTimeStamp(newMatch.getTimeStamp(),duration);
 		newMatch.setPermissibleTimeWindowTill(endts);
-		toBeAddedList.add(newMatch);
+		//toBeAddedList.add(newMatch);
 		
 		long t1=System.nanoTime();
-		for(ComplexEvent ce : toBeAddedList) {
-			for(EventClass waitingFor : map.keySet() ) {
-				if(!ce.containsEventOfClass(waitingFor.getName())) // ce already contains this
-					map.get(waitingFor).add(ce);
-				}
+		for(EventClass waitingFor : map.keySet() ) {
+			if(!newMatch.containsEventOfClass(waitingFor.getName())) // ce already contains this
+				map.get(waitingFor).add(newMatch);
 		}		
 		
-		for(Event generatedEvent:toNextStateList)
-			GlobalState.getInstance().submitNext(generatedEvent);
+		//for(Event generatedEvent:toNextStateList)
+		//	GlobalState.getInstance().submitNext(generatedEvent);
 		long t2=System.nanoTime();
 		System.err.println("Propagting time = "+(t2-t1)+" ns");
 	}
