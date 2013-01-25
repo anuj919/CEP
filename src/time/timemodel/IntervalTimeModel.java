@@ -4,48 +4,47 @@ import java.util.Comparator;
 import java.util.List;
 
 import time.timestamp.IntervalTimeStamp;
-import time.timestamp.TimeStamp;
 
-public class IntervalTimeModel extends TimeModel {
+public class IntervalTimeModel {
 	
 	private static IntervalTimeModel instance = new IntervalTimeModel();
 	
 	private IntervalTimeModel() {}
 	
-	public static TimeModel getInstance() {
+	public static IntervalTimeModel getInstance() {
 		return instance;
 	}
 	
-	@Override
-	public TimeStamp  combine(TimeStamp _ts1, TimeStamp _ts2) {
-		IntervalTimeStamp ts1=(IntervalTimeStamp) _ts1;
-		IntervalTimeStamp ts2=(IntervalTimeStamp) _ts2;
+	public IntervalTimeStamp  combine(IntervalTimeStamp ts1, IntervalTimeStamp ts2) {
 		return new IntervalTimeStamp(ts1.getStartTime().compareTo(ts2.getStartTime()) <0 ? ts1.getStartTime() : ts2.getStartTime(), //min
 				ts1.getEndTime().compareTo(ts2.getEndTime()) <0 ? ts2.getEndTime() : ts1.getEndTime()); //max
 	}
+	
+	public void  combineInPlace(IntervalTimeStamp ts1, IntervalTimeStamp ts2) {
+		double start = ts1.getStartTime().compareTo(ts2.getStartTime()) <0 ? ts1.getStartTime() : ts2.getStartTime(); //min
+		double end = ts1.getEndTime().compareTo(ts2.getEndTime()) <0 ? ts2.getEndTime() : ts1.getEndTime(); //max 
+		ts1.setStartTime(start);
+		ts1.setEndTime(end);
+	}
 
-	@Override
-	public TimeStamp next(TimeStamp t, List<TimeStamp > candidates) {
+	public IntervalTimeStamp next(IntervalTimeStamp t, List<IntervalTimeStamp > candidates) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 	
 	/* can event e2 with ts t2 be next event of e1 with ts t1?? */ 
 	
-	@Override
-	public boolean canBeNext(TimeStamp _ts2, TimeStamp _ts1) {
+	public boolean canBeNext(IntervalTimeStamp _ts2, IntervalTimeStamp _ts1) {
 		IntervalTimeStamp ts1=(IntervalTimeStamp) _ts1;
 		IntervalTimeStamp ts2=(IntervalTimeStamp) _ts2;
 		return ts1.getStartTime() <= ts2.getStartTime()  && ts1.getEndTime() <= ts2.getEndTime();
 	}
 
-	@Override
-	public Comparator<TimeStamp> getTimeStampComparator() {
+	public Comparator<IntervalTimeStamp> getTimeStampComparator() {
 		return IntervalTimeStamp.getComparator();
 	}
 
-	@Override
-	public TimeStamp getWindowCompletionTimeStamp(TimeStamp startts, long duration) {
+	public IntervalTimeStamp getWindowCompletionTimeStamp(IntervalTimeStamp startts, long duration) {
 		if (startts instanceof IntervalTimeStamp) {
 			IntervalTimeStamp ts = (IntervalTimeStamp) startts;
 			return new IntervalTimeStamp(ts.getStartTime()+duration, ts.getStartTime()+duration);
@@ -55,8 +54,7 @@ public class IntervalTimeModel extends TimeModel {
 		}
 	}
 
-	@Override
-	public TimeStamp getPointBasedTimeStamp(double time) {
+	public IntervalTimeStamp getPointBasedTimeStamp(double time) {
 		return new IntervalTimeStamp(time,time);
 	}
 }

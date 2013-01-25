@@ -3,7 +3,7 @@ package event;
 import java.io.Serializable;
 import java.util.Comparator;
 
-import time.timestamp.TimeStamp;
+import time.timestamp.IntervalTimeStamp;
 
 @SuppressWarnings("serial")
 public abstract class Event implements Serializable {
@@ -14,8 +14,8 @@ public abstract class Event implements Serializable {
 		}
 	};
 	abstract public EventClass getEventClass();
-	abstract public TimeStamp getTimeStamp();
-	abstract public void setTimeStamp(TimeStamp ts);
+	abstract public IntervalTimeStamp getTimeStamp();
+	abstract public void setTimeStamp(IntervalTimeStamp ts);
 	abstract public Object getAttributeValue(String attrName) throws NoSuchFieldException; 
 	/*public static Comparator<Event> getTimeBasedComparator() {
 		return timeBasedComparator;

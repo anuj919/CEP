@@ -3,7 +3,7 @@ package event;
 import java.util.HashMap;
 import java.util.Map;
 
-import time.timestamp.TimeStamp;
+import time.timestamp.IntervalTimeStamp;
 
 import event.eventtype.PrimaryEventType;
 import event.util.TypeChecker;
@@ -14,7 +14,7 @@ public class PrimaryEvent extends Event  {
 	//private int eventId;
 	EventClass eventClass;
 	@SuppressWarnings("unchecked")
-	TimeStamp timestamp;
+	IntervalTimeStamp timestamp;
 	Map<String,Object> values; 
 	boolean consumed;
 	
@@ -42,13 +42,13 @@ public class PrimaryEvent extends Event  {
 	
 	@SuppressWarnings("unchecked")
 	@Override
-	public void setTimeStamp(TimeStamp timestamp) {
+	public void setTimeStamp(IntervalTimeStamp timestamp) {
 		this.timestamp = timestamp;
 	}
 	
 	@SuppressWarnings("unchecked")
 	@Override
-	public TimeStamp getTimeStamp() {
+	public IntervalTimeStamp getTimeStamp() {
 		return timestamp;
 	}
 	

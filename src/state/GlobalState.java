@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 
 import time.timestamp.IntervalTimeStamp;
-import time.timestamp.TimeStamp;
 import event.Event;
 import event.EventClass;
 
@@ -95,7 +94,7 @@ public class GlobalState {
 		}
 	}
 
-	public void submitHeartbeat(TimeStamp timeStamp) {
+	public void submitHeartbeat(IntervalTimeStamp timeStamp) {
 		double heartbeat=0;
 		if(timeStamp instanceof IntervalTimeStamp)
 			heartbeat=((IntervalTimeStamp)timeStamp).getEndTime();

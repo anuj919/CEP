@@ -1,11 +1,10 @@
 package event.util;
 
 import time.timemodel.IntervalTimeModel;
-import time.timemodel.TimeModel;
 
 public class Policies {
 	private static Policies instance;
-	private TimeModel currentTimeModel;
+	private IntervalTimeModel currentTimeModel;
 	
 	public static Policies getInstance() {
 		if(instance==null)
@@ -18,7 +17,7 @@ public class Policies {
 		currentTimeModel = IntervalTimeModel.getInstance();
 	}
 	
-	public TimeModel getTimeModel() {
+	public IntervalTimeModel getTimeModel() {
 		return currentTimeModel; 
 	}
 }

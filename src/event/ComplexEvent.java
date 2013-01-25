@@ -12,8 +12,8 @@ import org.pcollections.HashTreePSet;
 import org.pcollections.PSet;
 import org.pcollections.PStack;
 
+import time.timemodel.IntervalTimeModel;
 import time.timestamp.IntervalTimeStamp;
-import time.timestamp.TimeStamp;
 import event.util.Policies;
 
 
@@ -21,12 +21,12 @@ import event.util.Policies;
 public class ComplexEvent extends Event  {
 	//private int eventId;
 	protected EventClass eventClass;
-	protected TimeStamp timestamp;
+	protected IntervalTimeStamp timestamp;
 	protected PStack<Event> constituents; 
 	protected Map<String,PStack<Event>> eventClassToEvents;
 	protected PSet<String> constitutingEventClasses;
 	
-	protected TimeStamp permissibleWindow;
+	protected double permissibleWindow;
 	//private Event endEvent;
 	private static enum endsHow {EVENT, DEADLINE};
 	protected endsHow endsBy;
@@ -38,10 +38,10 @@ public class ComplexEvent extends Event  {
 	
 	public static ComplexEvent copyOf(ComplexEvent ce) {
 		ComplexEvent newEvent = new ComplexEvent(ce.getEventClass());
-		newEvent.timestamp = ce.timestamp.deepCopy();
+		newEvent.timestamp = ce.timestamp.copy();
 		newEvent.constituents = ce.constituents;
 		newEvent.constitutingEventClasses = ce.constitutingEventClasses;
-		newEvent.permissibleWindow = (IntervalTimeStamp)ce.permissibleWindow.deepCopy();
+		newEvent.permissibleWindow = ce.permissibleWindow;
 		newEvent.eventClassToEvents= new HashMap<String, PStack<Event>>(ce.eventClassToEvents);
 		newEvent.endsBy = ce.endsBy;
 		newEvent.consumed=ce.consumed;
@@ -58,12 +58,12 @@ public class ComplexEvent extends Event  {
 	}
 	
 	@Override
-	public void setTimeStamp(TimeStamp timestamp) {
+	public void setTimeStamp(IntervalTimeStamp timestamp) {
 		this.timestamp = timestamp;
 	}
 	
 	@Override
-	public TimeStamp getTimeStamp() {
+	public IntervalTimeStamp getTimeStamp() {
 		return timestamp;
 	}
 	
@@ -96,7 +96,7 @@ public class ComplexEvent extends Event  {
 		if(timestamp == null)
 			timestamp = e.getTimeStamp();
 		else {
-			timestamp = Policies.getInstance().getTimeModel().combine(timestamp, e.getTimeStamp());
+			IntervalTimeModel.getInstance().combineInPlace(timestamp, e.getTimeStamp());
 		}
 	}
 	
@@ -149,23 +149,14 @@ public class ComplexEvent extends Event  {
 		endsBy = endsHow.EVENT;
 	}*/
 	
-	public void setPermissibleTimeWindowTill(TimeStamp window) {
+	public void setPermissibleTimeWindowTill(double window) {
 		permissibleWindow = window;
-		endsBy = endsHow.DEADLINE;
 	}
 	
-	public TimeStamp getPermissibleTimeWindowTill() {
+	public double getPermissibleTimeWindowTill() {
 		return permissibleWindow;
 	}
-	
-	public int getAuxAtomicInteger() {
-		return atomicInt.get();
-	}
-	
-	public int addAndGetAuxAtomicInteger(int i) {
-		return atomicInt.addAndGet(i);
-	}
-	
+		
 	public boolean containsEventOfClass(String className) {
 		return eventClassToEvents.containsKey(className);
 	}

@@ -19,9 +19,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import time.timemodel.TimeModel;
 import time.timestamp.IntervalTimeStamp;
-import time.timestamp.TimeStamp;
 import evaluator.Evaluator;
 import evaluator.JaninoEvalFactory;
 import event.ComplexEvent;
@@ -48,8 +46,7 @@ public class ConcurrentState implements State {
 	Map<Set<String>,Evaluator> evaluators;
 	String identifier;
 	Comparator<ComplexEvent> timeBasedComparator ;
-	TimeModel tm;
-	TimeStamp lastHearbitTimeStamp;
+	double lastHearbitTimeStamp;
 	GlobalState globalState;
 	
 	List<State> nextStates;
@@ -65,8 +62,7 @@ public class ConcurrentState implements State {
 		this.duration=duration;
 		this.numClasses = classes.size();
 		this.identifier = "Conc"+instanceCount.incrementAndGet();
-		this.tm = Policies.getInstance().getTimeModel();
-		this.lastHearbitTimeStamp = tm.getPointBasedTimeStamp(0);
+		this.lastHearbitTimeStamp = 0;
 		this.nextStates = new LinkedList<State>();
 		this.cachedEvents = new LinkedList<Event>();
 		this.globalState = GlobalState.getInstance();
@@ -103,7 +99,7 @@ public class ConcurrentState implements State {
 	
 	public void submitNext(final Event e) {
 		EventClass eClass = e.getEventClass();
-		consumeHeartbit(e.getTimeStamp()); 	// Assuming events are submitted in total order
+		consumeHeartbit(e.getTimeStamp().getEndTime()); 	// Assuming events are submitted in total order
 		//final Collection<ComplexEvent> toNextStateList = new ConcurrentLinkedQueue<ComplexEvent>();
 		//final Collection<ComplexEvent> toBeAddedList = new ConcurrentLinkedQueue<ComplexEvent>();
 		MultiQueue<ComplexEvent> multiQueue = map.get(eClass);
@@ -122,8 +118,8 @@ public class ConcurrentState implements State {
 						ComplexEvent partialMatch = itr.next();
 						
 						//check if the partial match is expired?
-						int result = tm.getTimeStampComparator().compare(lastHearbitTimeStamp, partialMatch.getPermissibleTimeWindowTill());
-						if(result>0) { //expired
+						boolean expired = lastHearbitTimeStamp > partialMatch.getPermissibleTimeWindowTill();
+						if(expired) { //expired
 							itr.remove();
 							continue;
 						} 
@@ -147,7 +143,8 @@ public class ConcurrentState implements State {
 							throw new RuntimeException("Something wrong with predicate, possibly attribute names");
 						}
 						if(numSubEvents == numClasses) {
-							if(constraintSatisfied && !extendedPartialMatch.isConsumed()) {
+							//if(constraintSatisfied && !extendedPartialMatch.isConsumed()) {
+							if(constraintSatisfied) {
 								extendedPartialMatch.setEventClass(outputEventClass);
 								//toNextStateList.add(extendedPartialMatch);
 								GlobalState.getInstance().submitNext(extendedPartialMatch);
@@ -185,7 +182,7 @@ public class ConcurrentState implements State {
 		// this new event will also start new partial match
 		ComplexEvent newMatch = new ComplexEvent(outputEventClass);
 		newMatch.addEvent(e);
-		TimeStamp endts=Policies.getInstance().getTimeModel().getWindowCompletionTimeStamp(newMatch.getTimeStamp(),duration);
+		double endts=newMatch.getTimeStamp().getStartTime()+duration;
 		newMatch.setPermissibleTimeWindowTill(endts);
 		//toBeAddedList.add(newMatch);
 		
@@ -200,22 +197,11 @@ public class ConcurrentState implements State {
 		long t2=System.nanoTime();
 		System.err.println("Propagting time = "+(t2-t1)+" ns");
 	}
-	
-	// This is just a wrapper around sendHeartbit(long) for TimeStamp
-	private void consumeHeartbit(TimeStamp ts) {
-		if (ts instanceof IntervalTimeStamp) {
-			IntervalTimeStamp its = (IntervalTimeStamp) ts;
-			consumeHeartbit(its.getEndTime());
-		}
-		else
-			assert false;
-	}
-	
+		
 	private void consumeHeartbit(double time) {
-		TimeStamp newHeartbit = tm.getPointBasedTimeStamp(time);
-		if(newHeartbit.compareTo(lastHearbitTimeStamp)!=0)
+		if(time != lastHearbitTimeStamp)
 			cachedEvents.clear();
-		lastHearbitTimeStamp = newHeartbit;
+		lastHearbitTimeStamp = time;
 		//TODO clean unwanted instance?? or not?
 	}
 

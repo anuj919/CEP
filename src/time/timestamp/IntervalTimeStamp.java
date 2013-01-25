@@ -3,15 +3,13 @@ package time.timestamp;
 import java.util.Comparator;
 
 
-public class IntervalTimeStamp implements time.timestamp.TimeStamp {
+public class IntervalTimeStamp {
 	Double start;
 	Double end;
 	
-	private static Comparator<TimeStamp> cachedComparator = new Comparator<TimeStamp >() {
+	private static Comparator<IntervalTimeStamp> cachedComparator = new Comparator<IntervalTimeStamp >() {
 		@Override
-		public int compare(TimeStamp _ts1, TimeStamp _ts2) {
-			IntervalTimeStamp ts1 = (IntervalTimeStamp) _ts1;
-			IntervalTimeStamp ts2 = (IntervalTimeStamp) _ts2;
+		public int compare(IntervalTimeStamp ts1, IntervalTimeStamp ts2) {
 			
 			if(ts1.getEndTime().compareTo(ts2.getEndTime()) <0 )
 				return -1;
@@ -29,7 +27,7 @@ public class IntervalTimeStamp implements time.timestamp.TimeStamp {
 		}
 	};
 	
-	public static  Comparator<TimeStamp > getComparator() {
+	public static  Comparator<IntervalTimeStamp > getComparator() {
 		return cachedComparator;
 	}
 	
@@ -50,21 +48,27 @@ public class IntervalTimeStamp implements time.timestamp.TimeStamp {
 		return end;
 	}
 	
+	public void setStartTime(double start) {
+		this.start=start;
+	}
+	
+	public void setEndTime(double end) {
+		this.end=end;
+	}
+	
 	/* compare end time stamps of e1 and e2,
 	 * if e1.end < e2.end => e1 < e2
 	 * if e1.end = e2.end && e1.start < e2.start => e1 < e2
 	 * if e1.end = e2.end && e1.start = e2.start => e1 = e2
 	 * if e1.end > e2.end => e1 > e2
 	 */
-		
-	@Override
-	public int compareTo(TimeStamp ots) {		
+	
+	public int compareTo(IntervalTimeStamp ots) {		
 		return getComparator().compare(this, ots);
 	}
 
 
-	@Override
-	public TimeStamp deepCopy() {
+	public IntervalTimeStamp copy() {
 		return new IntervalTimeStamp(this.start,this.end);
 	}	
 	

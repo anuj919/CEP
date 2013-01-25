@@ -7,9 +7,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import time.timemodel.TimeModel;
+import time.timemodel.IntervalTimeModel;
 import time.timestamp.IntervalTimeStamp;
-import time.timestamp.TimeStamp;
 import evaluator.Evaluator;
 import evaluator.JaninoEvalFactory;
 import event.ComplexEvent;
@@ -29,15 +28,15 @@ public class SequenceState implements State {
 	// we cache event in same time epoch, in order to avoid ordering related problems
 	List<Event> cachedEvents;
 	GlobalState globalState;
+	IntervalTimeModel tm;
 	
 	
 	List<ComplexEvent> partialMatches;
 	Evaluator evaluator;
 	Comparator<ComplexEvent> timeBasedComparator ;
-	TimeStamp lastHearbitTimeStamp;
+	double lastHearbitTimeStamp;
 	private static AtomicInteger instanceCount = new AtomicInteger(); // to create unique name for automaton state
 	private String identifier;
-	private TimeModel tm;
 	private boolean publishResult;
 	
 	public SequenceState(EventClass outputEventClass, Evaluator evaluator, long timeWindowDuration, boolean publishResult) {
@@ -49,8 +48,8 @@ public class SequenceState implements State {
 		
 		
 		this.timeBasedComparator = ComplexEvent.getTimeBasedComparator();
-		this.tm = Policies.getInstance().getTimeModel();
-		this.lastHearbitTimeStamp = tm.getPointBasedTimeStamp(0);
+		this.tm = IntervalTimeModel.getInstance();
+		this.lastHearbitTimeStamp = 0;
 		this.identifier = "Seq"+instanceCount.incrementAndGet();
 		//this.partialMatches = new SortedTreeList<ComplexEvent>(timeBasedComparator);
 		this.partialMatches = new LinkedList<ComplexEvent>();
@@ -81,34 +80,23 @@ public class SequenceState implements State {
 	public EventClass getOutputEventClass() {
 		return outputEventClass;
 	}
-	
-	// This is just a wrapper around sendHeartbit(long) for TimeStamp
-	private void consumeHeartbit(TimeStamp ts) {
-		if (ts instanceof IntervalTimeStamp) {
-			IntervalTimeStamp its = (IntervalTimeStamp) ts;
-			consumeHeartbit(its.getEndTime());
-		}
-		else
-			assert false;
-	}
 
 	private void consumeHeartbit(double time) {
-		TimeStamp newHeartbit = tm.getPointBasedTimeStamp(time);
-		if(newHeartbit.compareTo(lastHearbitTimeStamp)!=0)
+		if(time != lastHearbitTimeStamp)
 			cachedEvents.clear();
-		lastHearbitTimeStamp = newHeartbit;
+		lastHearbitTimeStamp = time;
 	}
 
 	@Override
 	public void submitNext(Event e) {
-		consumeHeartbit(e.getTimeStamp());		// Assuming events are submitted in total order
+		consumeHeartbit(e.getTimeStamp().getEndTime());		// Assuming events are submitted in total order
 		List<ComplexEvent> toNextStateList = new LinkedList<ComplexEvent>();
 		cachedEvents.add(e);
 		
 		if(firstState) {
 			ComplexEvent ce = new ComplexEvent(outputEventClass);
 			ce.addEvent(e);
-			TimeStamp endts=Policies.getInstance().getTimeModel().getWindowCompletionTimeStamp(ce.getTimeStamp(),duration);
+			double endts=ce.getTimeStamp().getStartTime()+duration;
 			ce.setPermissibleTimeWindowTill(endts);
 			toNextStateList.add(ce);
 		}
@@ -118,8 +106,8 @@ public class SequenceState implements State {
 			ComplexEvent partialMatch = itr.next();
 			
 			//check if the partial match is expired?
-			int result = tm.getTimeStampComparator().compare(lastHearbitTimeStamp, partialMatch.getPermissibleTimeWindowTill());
-			if(result>0) { //expired
+			boolean expired = lastHearbitTimeStamp > partialMatch.getPermissibleTimeWindowTill();
+			if(expired) { //expired
 				itr.remove();
 				continue;
 			}
@@ -163,7 +151,7 @@ public class SequenceState implements State {
 	public void propogatePartialMatches(Collection<ComplexEvent> newPartialMatches) {
 		List<ComplexEvent> toNextStateList= new LinkedList<ComplexEvent>();
 		for(ComplexEvent ce : newPartialMatches)
-			consumeHeartbit(ce.getTimeStamp());
+			consumeHeartbit(ce.getTimeStamp().getEndTime());
 	
 		//  Check if it can match with existing cached events, also add to partial matches
 		
@@ -231,8 +219,8 @@ public class SequenceState implements State {
 			ComplexEvent partialMatch = itr.next();
 			
 			//check if the partial match is expired?
-			int result = tm.getTimeStampComparator().compare(lastHearbitTimeStamp, partialMatch.getPermissibleTimeWindowTill());
-			if(result>0) { //expired
+			boolean expired = lastHearbitTimeStamp > partialMatch.getPermissibleTimeWindowTill();
+			if(expired) { //expired
 				itr.remove();
 				continue;
 			}
