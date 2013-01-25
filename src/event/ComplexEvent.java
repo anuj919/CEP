@@ -28,7 +28,6 @@ public class ComplexEvent extends Event  {
 	protected EventClass eventClass;
 	protected IntervalTimeStamp timestamp;
 	protected PStack<Event> constituents; 
-	protected Map<String,Event> eventClassToEvents;
 	protected int constitutingEventClasses;
 	
 	protected double permissibleWindow;
@@ -46,7 +45,6 @@ public class ComplexEvent extends Event  {
 		newEvent.constituents = ce.constituents;
 		newEvent.constitutingEventClasses = ce.constitutingEventClasses;
 		newEvent.permissibleWindow = ce.permissibleWindow;
-		newEvent.eventClassToEvents= new HashMap<String, Event>(ce.eventClassToEvents);
 		newEvent.endsBy = ce.endsBy;
 		newEvent.consumed=ce.consumed;
 		return newEvent;
@@ -56,7 +54,6 @@ public class ComplexEvent extends Event  {
 		this.eventClass = eventClass;
 		constituents = ConsPStack.empty();
 		constitutingEventClasses = 0;
-		eventClassToEvents= new HashMap<String, Event>();
 		consumed=false;
 	}
 	
@@ -75,7 +72,6 @@ public class ComplexEvent extends Event  {
 			constituents=constituents.plus(e);
 			//if(!constitutingEventClasses.contains(e.getEventClass().getName()))
 			//	constitutingEventClasses = constitutingEventClasses.plus(e.getEventClass().getName());;
-			eventClassToEvents.put(e.getEventClass().getName(), e);
 			constitutingEventClasses ^=  e.getEventClass().getName().hashCode();
 			updateTimeStamp(e);
 		} else {
@@ -112,7 +108,10 @@ public class ComplexEvent extends Event  {
 	}
 	
 	public Object getAttributeValue(String eventClassName, String attrName) throws NoSuchFieldException {
-		return eventClassToEvents.get(eventClassName).getAttributeValue(attrName);  
+		for(Event ce : constituents) 
+			if(eventClassName.equals(ce.getEventClass().getName()))
+				return ce.getAttributeValue(attrName);
+		return null;  
 	}
 	
 	@Override
@@ -133,7 +132,10 @@ public class ComplexEvent extends Event  {
 	}
 		
 	public boolean containsEventOfClass(String className) {
-		return eventClassToEvents.containsKey(className);
+		for(Event ce : constituents)
+			if(ce.getEventClass().getName().equals(className))
+				return true;
+		return false;
 	}
 	
 	@Override
