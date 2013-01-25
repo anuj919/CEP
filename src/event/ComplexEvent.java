@@ -29,7 +29,7 @@ public class ComplexEvent extends Event  {
 	protected IntervalTimeStamp timestamp;
 	protected PStack<Event> constituents; 
 	protected Map<String,Event> eventClassToEvents;
-	protected long constitutingEventClasses;
+	protected int constitutingEventClasses;
 	
 	protected double permissibleWindow;
 	//private Event endEvent;
@@ -76,7 +76,7 @@ public class ComplexEvent extends Event  {
 			//if(!constitutingEventClasses.contains(e.getEventClass().getName()))
 			//	constitutingEventClasses = constitutingEventClasses.plus(e.getEventClass().getName());;
 			eventClassToEvents.put(e.getEventClass().getName(), e);
-			constitutingEventClasses |=  hf.newHasher().putString(e.getEventClass().getName()).hash().asLong();
+			constitutingEventClasses ^=  e.getEventClass().getName().hashCode();
 			updateTimeStamp(e);
 		} else {
 			ComplexEvent ce = (ComplexEvent) e;
@@ -111,22 +111,7 @@ public class ComplexEvent extends Event  {
 		return getAttributeValue(eventClassName,attrName);
 	}
 	
-	// nthIntance index starts from 1
 	public Object getAttributeValue(String eventClassName, String attrName) throws NoSuchFieldException {
-		//determine the referenced event
-		/*CircularFifoBuffer buffer = new CircularFifoBuffer(nthInstance);
-
-		for(Event current:constituents) {
-			if(current.getEventClass().name.equals(eventClassName)) {
-				buffer.add(current);
-			}
-		}
-		if(buffer.size()<nthInstance)
-			return null;
-		for(int i=0;i<nthInstance-1;i++)
-			buffer.remove();
-		return ((Event)buffer.remove()).getAttributeValue(attrName); */
-		
 		return eventClassToEvents.get(eventClassName).getAttributeValue(attrName);  
 	}
 	
@@ -138,10 +123,6 @@ public class ComplexEvent extends Event  {
 	public void setEventClass(EventClass newClass) {
 		this.eventClass=newClass;
 	}
-	/*public void setWindowTillEvent(Event e) {
-		endEvent = e;
-		endsBy = endsHow.EVENT;
-	}*/
 	
 	public void setPermissibleTimeWindowTill(double window) {
 		permissibleWindow = window;
@@ -195,7 +176,7 @@ public class ComplexEvent extends Event  {
 		};
 	}
 	
-	public long getEventClassesAlreadyPresent(){
+	public int getEventClassesAlreadyPresent(){
 		return constitutingEventClasses; 
 	}
 	

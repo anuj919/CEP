@@ -46,7 +46,7 @@ public class ConcurrentState implements State {
 	long duration;
 	int numClasses;
 	//Evaluator evaluator;
-	Map<Long,Evaluator> evaluators;
+	Map<Integer,Evaluator> evaluators;
 	String identifier;
 	Comparator<ComplexEvent> timeBasedComparator ;
 	double lastHearbitTimeStamp;
@@ -56,8 +56,6 @@ public class ConcurrentState implements State {
 	
 	// we cache event in same time epoch, in order to avoid ordering related problems
 	List<Event> cachedEvents;
-	
-	private static HashFunction hf=Hashing.murmur3_128();
 	
 	private static AtomicInteger instanceCount=new AtomicInteger(0);
 	
@@ -135,7 +133,7 @@ public class ConcurrentState implements State {
 						boolean moreAttribNeeded = false;
 						try {
 							//constraintSatisfied = evaluator.evaluate(extendedPartialMatch);
-							Long eventClassesAlreadyPresent = extendedPartialMatch.getEventClassesAlreadyPresent();
+							Integer eventClassesAlreadyPresent = extendedPartialMatch.getEventClassesAlreadyPresent();
 							Evaluator evaluator = evaluators.get(eventClassesAlreadyPresent);
 							if(evaluator == null)
 								constraintSatisfied=true;
@@ -213,7 +211,7 @@ public class ConcurrentState implements State {
 	@Override
 	public void setPredicate(String predicate) {
 		//this.evaluator = JaninoEvalFactory.fromString(outputEventClass.getEventType(), predicate);
-		this.evaluators = new HashMap<Long, Evaluator>();
+		this.evaluators = new HashMap<Integer, Evaluator>();
 		String[] slicedPredicates = predicate.split("&&");		
 		Map<Set<String>,Set<String>> eventClassesToPredicate = new HashMap<Set<String>, Set<String>>();
 		// build a map for each event-class and corresponding predicates
@@ -228,9 +226,9 @@ public class ConcurrentState implements State {
 		}
 		
 		for(Set<String> ec : eventClassesToPredicate.keySet()) {
-			long eventClasses = 0;
+			int eventClasses = 0;
 			for(String eClass : ec) {
-				eventClasses |= hf.newHasher().putString(eClass).hash().asLong();
+				eventClasses ^= eClass.hashCode();
 			}
 			
 			StringBuilder conjunctionPred = new StringBuilder();
