@@ -12,6 +12,11 @@ import org.pcollections.HashTreePSet;
 import org.pcollections.PSet;
 import org.pcollections.PStack;
 
+import com.google.common.hash.HashCode;
+import com.google.common.hash.HashFunction;
+import com.google.common.hash.Hasher;
+import com.google.common.hash.Hashing;
+
 import time.timemodel.IntervalTimeModel;
 import time.timestamp.IntervalTimeStamp;
 import event.util.Policies;
@@ -23,17 +28,16 @@ public class ComplexEvent extends Event  {
 	protected EventClass eventClass;
 	protected IntervalTimeStamp timestamp;
 	protected PStack<Event> constituents; 
-	protected Map<String,PStack<Event>> eventClassToEvents;
-	protected PSet<String> constitutingEventClasses;
+	protected Map<String,Event> eventClassToEvents;
+	protected long constitutingEventClasses;
 	
 	protected double permissibleWindow;
 	//private Event endEvent;
 	private static enum endsHow {EVENT, DEADLINE};
 	protected endsHow endsBy;
 	private boolean consumed;
+	private static HashFunction hf = Hashing.murmur3_128();
 
-	private AtomicInteger atomicInt;
-	
 	
 	
 	public static ComplexEvent copyOf(ComplexEvent ce) {
@@ -42,7 +46,7 @@ public class ComplexEvent extends Event  {
 		newEvent.constituents = ce.constituents;
 		newEvent.constitutingEventClasses = ce.constitutingEventClasses;
 		newEvent.permissibleWindow = ce.permissibleWindow;
-		newEvent.eventClassToEvents= new HashMap<String, PStack<Event>>(ce.eventClassToEvents);
+		newEvent.eventClassToEvents= new HashMap<String, Event>(ce.eventClassToEvents);
 		newEvent.endsBy = ce.endsBy;
 		newEvent.consumed=ce.consumed;
 		return newEvent;
@@ -51,9 +55,8 @@ public class ComplexEvent extends Event  {
 	public ComplexEvent(EventClass eventClass) {
 		this.eventClass = eventClass;
 		constituents = ConsPStack.empty();
-		constitutingEventClasses = HashTreePSet.empty();
-		atomicInt = new AtomicInteger();
-		eventClassToEvents= new HashMap<String, PStack<Event>>();
+		constitutingEventClasses = 0;
+		eventClassToEvents= new HashMap<String, Event>();
 		consumed=false;
 	}
 	
@@ -72,12 +75,8 @@ public class ComplexEvent extends Event  {
 			constituents=constituents.plus(e);
 			//if(!constitutingEventClasses.contains(e.getEventClass().getName()))
 			//	constitutingEventClasses = constitutingEventClasses.plus(e.getEventClass().getName());;
-			PStack<Event> list=eventClassToEvents.get(e.getEventClass().getName());
-			if(list==null)
-				list=ConsPStack.singleton(e);
-			else
-				list=list.plus(e);
-			eventClassToEvents.put(e.getEventClass().getName(), list);
+			eventClassToEvents.put(e.getEventClass().getName(), e);
+			constitutingEventClasses |=  hf.newHasher().putString(e.getEventClass().getName()).hash().asLong();
 			updateTimeStamp(e);
 		} else {
 			ComplexEvent ce = (ComplexEvent) e;
@@ -107,17 +106,13 @@ public class ComplexEvent extends Event  {
 	@Override
 	public Object getAttributeValue(String attrSpec) throws NoSuchFieldException {
 		String[] eventClassAndAttr = attrSpec.split("\\.");
-		String[] eventClassAndInstance = eventClassAndAttr[0].split(":");
-		
-		String eventClassName = eventClassAndInstance[0];
-		int nthInstance = ((eventClassAndInstance.length==2) ? Integer.parseInt(eventClassAndInstance[1]) : 1);
+		String eventClassName = eventClassAndAttr[0];
 		String attrName = eventClassAndAttr[1];
-		
-		return getAttributeValue(eventClassName, nthInstance, attrName);
+		return getAttributeValue(eventClassName,attrName);
 	}
 	
 	// nthIntance index starts from 1
-	public Object getAttributeValue(String eventClassName, int nthInstance, String attrName) throws NoSuchFieldException {
+	public Object getAttributeValue(String eventClassName, String attrName) throws NoSuchFieldException {
 		//determine the referenced event
 		/*CircularFifoBuffer buffer = new CircularFifoBuffer(nthInstance);
 
@@ -132,10 +127,7 @@ public class ComplexEvent extends Event  {
 			buffer.remove();
 		return ((Event)buffer.remove()).getAttributeValue(attrName); */
 		
-		PStack<Event> list=eventClassToEvents.get(eventClassName);
-		if(list==null || list.size()-nthInstance < 0)
-			return null;
-		return list.get(list.size()-nthInstance).getAttributeValue(attrName);  
+		return eventClassToEvents.get(eventClassName).getAttributeValue(attrName);  
 	}
 	
 	@Override
@@ -203,8 +195,8 @@ public class ComplexEvent extends Event  {
 		};
 	}
 	
-	public Set<String> getEventClassesAlreadyPresent(){
-		return eventClassToEvents.keySet(); 
+	public long getEventClassesAlreadyPresent(){
+		return constitutingEventClasses; 
 	}
 	
 }

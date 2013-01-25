@@ -45,10 +45,10 @@ public class TestJanino {
 		System.out.println(end-start);
 		System.out.println(result);
 		
-		Double E1_a = (Double)ce.getAttributeValue("E1",1,"a");
-		Double E2_a = (Double)ce.getAttributeValue("E2",1,"a");
-		Integer E3_a = (Integer)ce.getAttributeValue("E3",1,"a");
-		Integer E4_a = (Integer)ce.getAttributeValue("E4",1,"a");
+		Double E1_a = (Double)ce.getAttributeValue("E1","a");
+		Double E2_a = (Double)ce.getAttributeValue("E2","a");
+		Integer E3_a = (Integer)ce.getAttributeValue("E3","a");
+		Integer E4_a = (Integer)ce.getAttributeValue("E4","a");
 
 				
 		
@@ -117,9 +117,9 @@ public class TestJanino {
 		ce.setTimeStamp(new IntervalTimeStamp(0.0, 0.0));
 		try {
 			System.out.println(ce.getAttributeValue("E1.a"));
-			System.out.println(ce.getAttributeValue("E2",1,"a"));
-			System.out.println(ce.getAttributeValue("E3",1,"a"));
-			System.out.println(ce.getAttributeValue("E4",1,"a"));
+			System.out.println(ce.getAttributeValue("E2","a"));
+			System.out.println(ce.getAttributeValue("E3","a"));
+			System.out.println(ce.getAttributeValue("E4","a"));
 		} catch (NoSuchFieldException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

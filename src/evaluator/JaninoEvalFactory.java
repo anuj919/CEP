@@ -58,14 +58,12 @@ public class JaninoEvalFactory {
             }
             
             String[] eventClassAndAttr = name.split("\\.");
-    		String[] eventClassAndInstance = eventClassAndAttr[0].split(":");
     		
-    		String eventClassName = eventClassAndInstance[0];
-    		int nthInstance = ((eventClassAndInstance.length==2) ? Integer.parseInt(eventClassAndInstance[1]) : 1);
+    		String eventClassName = eventClassAndAttr[0];
     		String attrName = eventClassAndAttr[1];
                         
             if(attrType!=null) {
-            	varCode.append(attrType.name()+" " + newname+ " = ("+attrType.name()+")vars.getAttributeValue(\"" + eventClassName+"\","+ nthInstance +",\"" + attrName + "\");\n");
+            	varCode.append(attrType.name()+" " + newname+ " = ("+attrType.name()+")vars.getAttributeValue(\"" + eventClassName+"\",\"" + attrName + "\");\n");
             }
             else
             	attrNotFound=true;
@@ -90,6 +88,7 @@ public class JaninoEvalFactory {
          +"}\n";
 
         try {
+        	//System.err.println(source);
             compiler.cook(new StringReader(source));
             Class clss = compiler.getClassLoader().loadClass(
                     "evaluator.JaninoEvaluator"+unique_id);

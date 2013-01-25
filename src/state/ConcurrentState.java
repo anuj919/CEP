@@ -19,6 +19,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.google.common.hash.HashFunction;
+import com.google.common.hash.Hashing;
+
 import time.timestamp.IntervalTimeStamp;
 import evaluator.Evaluator;
 import evaluator.JaninoEvalFactory;
@@ -43,7 +46,7 @@ public class ConcurrentState implements State {
 	long duration;
 	int numClasses;
 	//Evaluator evaluator;
-	Map<Set<String>,Evaluator> evaluators;
+	Map<Long,Evaluator> evaluators;
 	String identifier;
 	Comparator<ComplexEvent> timeBasedComparator ;
 	double lastHearbitTimeStamp;
@@ -53,6 +56,8 @@ public class ConcurrentState implements State {
 	
 	// we cache event in same time epoch, in order to avoid ordering related problems
 	List<Event> cachedEvents;
+	
+	private static HashFunction hf=Hashing.murmur3_128();
 	
 	private static AtomicInteger instanceCount=new AtomicInteger(0);
 	
@@ -130,15 +135,15 @@ public class ConcurrentState implements State {
 						boolean moreAttribNeeded = false;
 						try {
 							//constraintSatisfied = evaluator.evaluate(extendedPartialMatch);
-							Set<String> eventClassesAlreadyPresent = extendedPartialMatch.getEventClassesAlreadyPresent();
+							Long eventClassesAlreadyPresent = extendedPartialMatch.getEventClassesAlreadyPresent();
 							Evaluator evaluator = evaluators.get(eventClassesAlreadyPresent);
 							if(evaluator == null)
 								constraintSatisfied=true;
 							else
 								constraintSatisfied = evaluator.evaluate(extendedPartialMatch);
-						//} catch(NullPointerException ex) {
+						} catch(NullPointerException ex) {
 						//	//ignore: signifies that not enough values are present to evaluate predicate to be true
-						//	moreAttribNeeded = true;
+							moreAttribNeeded = true;
 						} catch(NoSuchFieldException nsfe) {
 							throw new RuntimeException("Something wrong with predicate, possibly attribute names");
 						}
@@ -208,7 +213,7 @@ public class ConcurrentState implements State {
 	@Override
 	public void setPredicate(String predicate) {
 		//this.evaluator = JaninoEvalFactory.fromString(outputEventClass.getEventType(), predicate);
-		this.evaluators = new HashMap<Set<String>, Evaluator>();
+		this.evaluators = new HashMap<Long, Evaluator>();
 		String[] slicedPredicates = predicate.split("&&");		
 		Map<Set<String>,Set<String>> eventClassesToPredicate = new HashMap<Set<String>, Set<String>>();
 		// build a map for each event-class and corresponding predicates
@@ -223,6 +228,11 @@ public class ConcurrentState implements State {
 		}
 		
 		for(Set<String> ec : eventClassesToPredicate.keySet()) {
+			long eventClasses = 0;
+			for(String eClass : ec) {
+				eventClasses |= hf.newHasher().putString(eClass).hash().asLong();
+			}
+			
 			StringBuilder conjunctionPred = new StringBuilder();
 			for(String pred : eventClassesToPredicate.get(ec)) {
 				conjunctionPred.append(" && ");
@@ -231,7 +241,7 @@ public class ConcurrentState implements State {
 			// remove the first &&
 			conjunctionPred.delete(0, " && ".length());
 			Evaluator evaluator = JaninoEvalFactory.fromString(outputEventClass.getEventType(), conjunctionPred.toString()); 
-			evaluators.put(ec, evaluator);
+			evaluators.put(eventClasses, evaluator);
 		}
 	}
 
