@@ -34,10 +34,7 @@ public class ComplexEvent extends Event  {
 	//private Event endEvent;
 	private static enum endsHow {EVENT, DEADLINE};
 	protected endsHow endsBy;
-	private boolean consumed;
-	private static HashFunction hf = Hashing.murmur3_128();
-
-	
+	private boolean consumed;	
 	
 	public static ComplexEvent copyOf(ComplexEvent ce) {
 		ComplexEvent newEvent = new ComplexEvent(ce.getEventClass());
@@ -91,8 +88,8 @@ public class ComplexEvent extends Event  {
 		if(timestamp == null)
 			timestamp = e.getTimeStamp();
 		else {
-			timestamp.setStartTime(Math.min(timestamp.getStartTime(),e.getTimeStamp().getStartTime()));
-			timestamp.setEndTime(Math.max(timestamp.getEndTime(),e.getTimeStamp().getEndTime()));
+			timestamp.start = (Math.min(timestamp.start,e.getTimeStamp().start));
+			timestamp.end = (Math.max(timestamp.end,e.getTimeStamp().end));
 			//IntervalTimeModel.getInstance().combineInPlace(timestamp, e.getTimeStamp());
 		}
 	}

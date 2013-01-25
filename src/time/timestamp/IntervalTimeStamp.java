@@ -4,8 +4,8 @@ import java.util.Comparator;
 
 
 public class IntervalTimeStamp {
-	Double start;
-	Double end;
+	public Double start;
+	public Double end;
 	
 	private static Comparator<IntervalTimeStamp> cachedComparator = new Comparator<IntervalTimeStamp >() {
 		@Override
