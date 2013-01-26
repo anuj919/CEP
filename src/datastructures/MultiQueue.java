@@ -8,18 +8,18 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class MultiQueue<T> {
 	private int numInternalQueue;
-	private List<Queue<T>> lists;
+	private List<List<T>> lists;
 	private int roundNum;
 
 	public MultiQueue(int numInternalQueue) {
 		this.numInternalQueue = numInternalQueue;
-		lists = new ArrayList<Queue<T>>(numInternalQueue);
+		lists = new ArrayList<List<T>>(numInternalQueue);
 		for(int i=0;i<numInternalQueue;i++)
-			lists.add(new ConcurrentLinkedQueue<T>());
+			lists.add(new LinkedList<T>());
 		roundNum = 0;
 	}
 	
-	public Queue<T> getList(int index) {
+	public List<T> getList(int index) {
 		return lists.get(index);
 	}
 	

@@ -113,7 +113,7 @@ public class ConcurrentState implements State {
 		
 		//generate new partial matches
 		for(int i=0;i<multiQueue.getNumInternalQueue();i++) {
-			final Queue<ComplexEvent> list = multiQueue.getList(i);
+			final List<ComplexEvent> list = multiQueue.getList(i);
 			tasks.add(Executors.callable( new Runnable() {
 				@Override
 				public void run() {
