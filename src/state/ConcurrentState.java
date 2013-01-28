@@ -19,6 +19,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.esotericsoftware.kryo.util.IdentityMap.Entry;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 
@@ -117,6 +118,12 @@ public class ConcurrentState implements State {
 			tasks.add(Executors.callable( new Runnable() {
 				@Override
 				public void run() {
+					
+					Map<EventClass,List<ComplexEvent>> tempMap = new HashMap<EventClass, List<ComplexEvent>>();
+					for(EventClass eClass : map.keySet()) {
+						tempMap.put(eClass, new LinkedList<ComplexEvent>());
+					}
+					
 					for(Iterator<ComplexEvent> itr=list.iterator(); itr.hasNext();) {
 						ComplexEvent partialMatch = itr.next();
 						
@@ -165,13 +172,14 @@ public class ConcurrentState implements State {
 								// toBeAddedList.add(extendedPartialMatch);
 								for(EventClass waitingFor : map.keySet() ) {
 									if(!extendedPartialMatch.containsEventOfClass(waitingFor.getName())) // ce already contains this
-										map.get(waitingFor).add(extendedPartialMatch);
+										tempMap.get(waitingFor).add(extendedPartialMatch);
 								}
 							}
 								
 						}
-					}	
-					
+					}
+					for(java.util.Map.Entry<EventClass,List<ComplexEvent>> entry : tempMap.entrySet())
+						map.get(entry.getKey()).addAll(entry.getValue());
 				}
 			} ));	
 		}

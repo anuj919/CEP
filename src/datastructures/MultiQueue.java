@@ -31,5 +31,11 @@ public class MultiQueue<T> {
 		lists.get(roundNum).add(object);
 		roundNum=(roundNum+1)%numInternalQueue;
 	}
-
+	
+	public synchronized void addAll(List<T> list) {
+		for(T object : list) {
+			lists.get(roundNum).add(object);
+			roundNum=(roundNum+1)%numInternalQueue;
+		}
+	}
 }
