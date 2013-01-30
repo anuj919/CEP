@@ -130,12 +130,12 @@ public class TestConcurrentState {
 			
 			//e=kryo.readObject(input, PrimaryEvent.class);
 			long t2=System.nanoTime();
-			System.out.println(e);
+			//System.out.println(e);
 			
 			globalState.submitNext(e);
 			endState.getGeneratedEvents(generatedEveList);
 			long t3=System.nanoTime();
-			System.out.println(generatedEveList);
+			//System.out.println(generatedEveList);
 			System.err.println("Dequeue time: "+(t2-t1)+" Processing time: "+(t3-t2) );
 			generatedEvents+=generatedEveList.size();
 			//if(generatedEvents-prev>1000) {
