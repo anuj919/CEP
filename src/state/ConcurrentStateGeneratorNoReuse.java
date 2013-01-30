@@ -17,8 +17,6 @@ import org.paukov.combinatorics.ICombinatoricsVector;
 
 import com.google.common.collect.Collections2;
 
-import datastructures.PermutationsOfN;
-
 import evaluator.Evaluator;
 import evaluator.JaninoEvalFactory;
 import event.EventClass;
