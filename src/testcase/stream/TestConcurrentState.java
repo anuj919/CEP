@@ -79,10 +79,19 @@ public class TestConcurrentState {
 		for(EventClass ec : classes)
 			globalState.registerEventClass(ec);
 		
+		eventClasses=eventClasses.trim().replaceAll("\\s+", " ");
 		List<EventClass> seqList = new ArrayList<EventClass>();
 		StringTokenizer tokenizer = new StringTokenizer(eventClasses, " ");
-		while(tokenizer.hasMoreTokens())
-			seqList.add(globalState.getEventClass(tokenizer.nextToken()));
+		while(tokenizer.hasMoreTokens()) {
+			String eClassName = tokenizer.nextToken();
+			EventClass eClass = globalState.getEventClass(eClassName);
+			if(eClass == null) {
+				System.err.println("Found unknown event class "+eClassName+" in argument");
+				System.exit(1);
+			}
+			else
+				seqList.add(eClass);
+		}
 		
 		ConcurrentState concState = new ConcurrentState(timeDuration,predicate,seqList);
 		EndState endState = new EndState();
@@ -121,11 +130,12 @@ public class TestConcurrentState {
 			
 			//e=kryo.readObject(input, PrimaryEvent.class);
 			long t2=System.nanoTime();
-			//System.out.println(e);
+			System.out.println(e);
 			
 			globalState.submitNext(e);
 			endState.getGeneratedEvents(generatedEveList);
 			long t3=System.nanoTime();
+			System.out.println(generatedEveList);
 			System.err.println("Dequeue time: "+(t2-t1)+" Processing time: "+(t3-t2) );
 			generatedEvents+=generatedEveList.size();
 			//if(generatedEvents-prev>1000) {

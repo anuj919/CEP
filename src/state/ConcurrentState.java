@@ -19,6 +19,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.paukov.combinatorics.Factory;
+import org.paukov.combinatorics.Generator;
+import org.paukov.combinatorics.ICombinatoricsVector;
+
 import com.esotericsoftware.kryo.util.IdentityMap.Entry;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
@@ -44,6 +48,7 @@ public class ConcurrentState implements State {
 	
 	Map<EventClass, MultiQueue<ComplexEvent> > map;
 	EventClass outputEventClass;
+	List<EventClass> inputEventClasses;
 	long duration;
 	int numClasses;
 	//Evaluator evaluator;
@@ -70,6 +75,7 @@ public class ConcurrentState implements State {
 		this.nextStates = new LinkedList<State>();
 		this.cachedEvents = new LinkedList<Event>();
 		this.globalState = GlobalState.getInstance();
+		this.inputEventClasses = new LinkedList<EventClass>(classes);
 		
 		
 		StringBuilder strbldr = new StringBuilder(classes.get(0).getName());
@@ -219,7 +225,14 @@ public class ConcurrentState implements State {
 	@Override
 	public void setPredicate(String predicate) {
 		//this.evaluator = JaninoEvalFactory.fromString(outputEventClass.getEventType(), predicate);
-		this.evaluators = new HashMap<Integer, Evaluator>();
+		this.evaluators=getEvaluators(predicate, inputEventClasses);
+		
+	}
+	
+	private Map<Integer, Evaluator> getEvaluators(String predicate, List<EventClass> allEventClasses) {
+		Map<Integer, Evaluator> evaluators = new HashMap<Integer, Evaluator>();
+		
+		
 		String[] slicedPredicates = predicate.split("&&");		
 		Map<Set<String>,Set<String>> eventClassesToPredicate = new HashMap<Set<String>, Set<String>>();
 		// build a map for each event-class and corresponding predicates
@@ -233,22 +246,50 @@ public class ConcurrentState implements State {
 			correspondingPredicates.add(pred);
 		}
 		
-		for(Set<String> ec : eventClassesToPredicate.keySet()) {
-			int eventClasses = 0;
-			for(String eClass : ec) {
-				eventClasses ^= eClass.hashCode();
+		Map<Integer,Set<String>> eventClassToPredicates_includingSubsets = new HashMap<Integer, Set<String>>();
+		ICombinatoricsVector<EventClass> initialVector = Factory.createVector(allEventClasses);
+		Generator<EventClass> gen = Factory.createSubSetGenerator(initialVector);
+		//PermutationsOfN<EventClass> permuatationsOfN = new PermutationsOfN<EventClass>();
+		for(ICombinatoricsVector<EventClass> subset : gen) {
+			if(subset.getSize()==0)
+				continue;
+			
+			Set<String> predicates = new HashSet<String>();
+			Set<String> eventClassNames = new HashSet<String>();
+			int hash = 0;
+			for (EventClass eClass : subset) {
+				hash^= eClass.getName().hashCode();
+				eventClassNames.add(eClass.getName());
 			}
 			
-			StringBuilder conjunctionPred = new StringBuilder();
-			for(String pred : eventClassesToPredicate.get(ec)) {
-				conjunctionPred.append(" && ");
-				conjunctionPred.append(pred);
+			if(eventClassesToPredicate.containsKey(eventClassNames))
+				predicates.addAll(eventClassesToPredicate.get(eventClassNames));
+			if(subset.getSize()>1) { 
+				// get all subset of length k-1, add all their predicates
+				for(int i=0;i<subset.getSize();i++) {
+					// get set containing all class except i
+					int pastHash = hash ^ subset.getValue(i).getName().hashCode();
+					// add all predicates corresponding to set
+					if(eventClassToPredicates_includingSubsets.containsKey(pastHash))
+					predicates.addAll(eventClassToPredicates_includingSubsets.get(pastHash));
+				}
 			}
-			// remove the first &&
-			conjunctionPred.delete(0, " && ".length());
-			Evaluator evaluator = JaninoEvalFactory.fromString(outputEventClass.getEventType(), conjunctionPred.toString()); 
-			evaluators.put(eventClasses, evaluator);
+			
+			if(predicates.size()==0)
+				continue;
+			
+			StringBuilder predicateForSubset = new StringBuilder();
+			for(String pred : predicates) {
+				predicateForSubset.append(" && ");
+				predicateForSubset.append(pred);
+			}
+			predicateForSubset.delete(0, " && ".length());
+			
+			eventClassToPredicates_includingSubsets.put(hash, predicates);
+			evaluators.put(hash, JaninoEvalFactory.fromString(outputEventClass.getEventType(), predicateForSubset.toString()));
 		}
+		return evaluators;
+		
 	}
 
 	@Override
